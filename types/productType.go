@@ -1,0 +1,10 @@
+package types
+
+type ProductType string
+
+const (
+	PRODUCT_TYPE_AUTO_RENEWABLE ProductType = "AUTO_RENEWABLE"
+	PRODUCT_TYPE_NON_RENEWABLE  ProductType = "NON_RENEWABLE"
+	PRODUCT_TYPE_CONSUMABLE     ProductType = "CONSUMABLE"
+	PRODUCT_TYPE_NON_CONSUMABLE ProductType = "NON_CONSUMABLE"
+)
