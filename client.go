@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/godrealms/go-apple-sdk/types"
-	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/godrealms/go-apple-sdk/types"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // AppleClient defines the type of Apple service client
@@ -125,7 +126,7 @@ func (client *Client) SetService(service AppleClient) *Client {
 			client.config.BaseUrl = ""
 		}
 	case AppStoreServerClient:
-		client.config.BaseUrl = "https://api.appstoreconnect.apple.com"
+		client.config.BaseUrl = "https://api.storekit.itunes.apple.com"
 		if client.sandbox {
 			client.config.BaseUrl = "https://api.storekit-sandbox.itunes.apple.com"
 		}
