@@ -1,0 +1,13 @@
+{
+  "data": {
+    "type": "inAppPurchases",
+    "id": "iap-1",
+    "attributes": {
+      "name": "Pro Pack",
+      "productId": "com.acme.widgets.pro",
+      "inAppPurchaseType": "NON_CONSUMABLE",
+      "state": "WAITING_FOR_UPLOAD",
+      "familySharable": true
+    }
+  }
+}

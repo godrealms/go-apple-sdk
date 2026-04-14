@@ -52,6 +52,14 @@ type Service struct {
 	profiles              *ProfilesService
 	users                 *UsersService
 	userInvitations       *UserInvitationsService
+
+	appStoreVersions             *AppStoreVersionsService
+	appStoreVersionSubmissions   *AppStoreVersionSubmissionsService
+	appStoreVersionLocalizations *AppStoreVersionLocalizationsService
+	appScreenshotSets            *AppScreenshotSetsService
+	appScreenshots               *AppScreenshotsService
+	inAppPurchases               *InAppPurchasesService
+	subscriptionGroups           *SubscriptionGroupsService
 }
 
 // New constructs a [Service] with the given configuration.
@@ -85,6 +93,13 @@ func New(cfg Config) *Service {
 	s.profiles = &ProfilesService{svc: s}
 	s.users = &UsersService{svc: s}
 	s.userInvitations = &UserInvitationsService{svc: s}
+	s.appStoreVersions = &AppStoreVersionsService{svc: s}
+	s.appStoreVersionSubmissions = &AppStoreVersionSubmissionsService{svc: s}
+	s.appStoreVersionLocalizations = &AppStoreVersionLocalizationsService{svc: s}
+	s.appScreenshotSets = &AppScreenshotSetsService{svc: s}
+	s.appScreenshots = &AppScreenshotsService{svc: s}
+	s.inAppPurchases = &InAppPurchasesService{svc: s}
+	s.subscriptionGroups = &SubscriptionGroupsService{svc: s}
 	return s
 }
 
@@ -138,6 +153,48 @@ func (s *Service) Users() *UsersService { return s.users }
 // sending team invitations.
 // See https://developer.apple.com/documentation/appstoreconnectapi/user_invitations
 func (s *Service) UserInvitations() *UserInvitationsService { return s.userInvitations }
+
+// AppStoreVersions returns the sub-service for App Store release
+// catalog entries (one per shipping version of an app).
+// See https://developer.apple.com/documentation/appstoreconnectapi/app_store_versions
+func (s *Service) AppStoreVersions() *AppStoreVersionsService { return s.appStoreVersions }
+
+// AppStoreVersionSubmissions returns the sub-service for submitting
+// App Store versions for review (the programmatic "Submit for Review"
+// button).
+// See https://developer.apple.com/documentation/appstoreconnectapi/app_store_version_submissions
+func (s *Service) AppStoreVersionSubmissions() *AppStoreVersionSubmissionsService {
+	return s.appStoreVersionSubmissions
+}
+
+// AppStoreVersionLocalizations returns the sub-service for managing
+// per-locale App Store metadata (description, keywords, what's new,
+// marketing/support URLs, promotional text).
+// See https://developer.apple.com/documentation/appstoreconnectapi/app_store_version_localizations
+func (s *Service) AppStoreVersionLocalizations() *AppStoreVersionLocalizationsService {
+	return s.appStoreVersionLocalizations
+}
+
+// AppScreenshotSets returns the sub-service for screenshot set
+// containers (one per screenshotDisplayType per localization).
+// See https://developer.apple.com/documentation/appstoreconnectapi/app_screenshot_sets
+func (s *Service) AppScreenshotSets() *AppScreenshotSetsService { return s.appScreenshotSets }
+
+// AppScreenshots returns the sub-service for uploading individual
+// screenshots. Use [AppScreenshotsService.Upload] for the full
+// reserve → PUT → commit flow from an in-memory buffer.
+// See https://developer.apple.com/documentation/appstoreconnectapi/app_screenshots
+func (s *Service) AppScreenshots() *AppScreenshotsService { return s.appScreenshots }
+
+// InAppPurchases returns the sub-service for non-subscription in-app
+// purchases under /v1/inAppPurchasesV2.
+// See https://developer.apple.com/documentation/appstoreconnectapi/in-app_purchases_v2
+func (s *Service) InAppPurchases() *InAppPurchasesService { return s.inAppPurchases }
+
+// SubscriptionGroups returns the sub-service for auto-renewable
+// subscription group management.
+// See https://developer.apple.com/documentation/appstoreconnectapi/subscription_groups
+func (s *Service) SubscriptionGroups() *SubscriptionGroupsService { return s.subscriptionGroups }
 
 // BaseURL returns the service's base URL (without trailing slash).
 func (s *Service) BaseURL() string { return s.baseURL }

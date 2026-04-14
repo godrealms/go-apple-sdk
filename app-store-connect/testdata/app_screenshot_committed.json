@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "shot-1",
+    "attributes": {
+      "fileName": "hero.png",
+      "fileSize": 12,
+      "sourceFileChecksum": "6f5902ac237024bdd0c176cb93063dc4",
+      "uploaded": true,
+      "imageAsset": {
+        "templateUrl": "https://example.apple/hero/{w}x{h}.png",
+        "width": 1320,
+        "height": 2868
+      }
+    }
+  }
+}

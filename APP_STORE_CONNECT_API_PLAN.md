@@ -84,15 +84,16 @@ App Store Connect API 是一个极其庞大且复杂的 REST API 系统，包含
 ### 阶段四：App Store 提审与元数据自动化 (Store Submission)
 **目标**：实现类似 `fastlane deliver` 的全自动 App Store 提审流和商品管理。
 
-- [ ] **版本与提审管理 (App Store Versions & Reviews)**
-  - 创建和配置新的 App Store 版本 (`POST /v1/appStoreVersions`)
-  - 提交应用审核 (`POST /v1/appStoreVersionSubmissions`)
-- [ ] **应用商店元数据与资产 (Metadata & Media)**
-  - 更新多语言的推广文本和 Release Notes (`PATCH /v1/appStoreVersionLocalizations/{id}`)
-  - 上传应用截图和预览视频 (`POST /v1/appScreenshotSets`, `POST /v1/appScreenshots`)
-- [ ] **应用内购买配置管理 (In-App Purchases Configuration)**
-  - 动态创建和修改内购商品 (`POST /v1/inAppPurchasesV2`)
-  - 管理订阅组和价格档位配置 (`POST /v1/subscriptionGroups`)
+- [x] **版本与提审管理 (App Store Versions & Reviews)**
+  - 创建和配置新的 App Store 版本 (`POST /v1/appStoreVersions`) —— `AppStoreVersionsService.Create` / `Get` / `ListForApp` / `ListForAppIterator` / `Update`(+`NewAppStoreVersionUpdate()` Builder) / `Delete` / `SelectBuild`(PATCH `/relationships/build`)
+  - 提交应用审核 (`POST /v1/appStoreVersionSubmissions`) —— `AppStoreVersionSubmissionsService.Submit` / `Cancel`
+- [x] **应用商店元数据与资产 (Metadata & Media)**
+  - 更新多语言的推广文本和 Release Notes (`PATCH /v1/appStoreVersionLocalizations/{id}`) —— `AppStoreVersionLocalizationsService.Create` / `ListForVersion` / `Get` / `Update`(+6-setter Builder: Description / Keywords / MarketingURL / PromotionalText / SupportURL / WhatsNew) / `Delete`
+  - 上传应用截图和预览视频 (`POST /v1/appScreenshotSets`, `POST /v1/appScreenshots`) —— `AppScreenshotSetsService.Create` / `Get` / `ListForLocalization` / `Delete`；`AppScreenshotsService.Reserve` / `ExecuteUploadOperations` / `Commit` / `Delete` / `Get` + 一体化 `Upload(setID, filename, bytes)` 封装 Apple 的三步流程（reservation → PUT 到 Apple 返回的上传端点 → 带 md5 校验的 PATCH commit）
+- [x] **应用内购买配置管理 (In-App Purchases Configuration)**
+  - 动态创建和修改内购商品 (`POST /v1/inAppPurchasesV2`) —— `InAppPurchasesService.ListForApp` / `ListForAppIterator` / `Get` / `Create` / `Update`(+`NewInAppPurchaseUpdate()` Builder) / `Delete`
+  - 管理订阅组和价格档位配置 (`POST /v1/subscriptionGroups`) —— `SubscriptionGroupsService.ListForApp` / `ListForAppIterator` / `Get` / `Create` / `Update` / `Delete`
+  - 阶段四结束包 coverage 85.3%，示例新增 `version-submit`、`screenshot-upload`、`iap-create` 三个子目录
 
 ### 阶段五：工程化规范与社区生态 (Engineering & OSS)
 **目标**：打造生产级可用、文档详尽、易于开源社区贡献的高质量 Go 项目。

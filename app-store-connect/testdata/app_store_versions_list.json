@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "type": "appStoreVersions",
+      "id": "ver-1",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.2.3",
+        "appStoreState": "READY_FOR_SALE"
+      }
+    },
+    {
+      "type": "appStoreVersions",
+      "id": "ver-2",
+      "attributes": {
+        "platform": "IOS",
+        "versionString": "1.2.4",
+        "appStoreState": "PREPARE_FOR_SUBMISSION"
+      }
+    }
+  ]
+}

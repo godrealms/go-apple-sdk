@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "appScreenshots",
+    "id": "shot-1",
+    "attributes": {
+      "fileName": "hero.png",
+      "fileSize": 12,
+      "uploaded": false,
+      "uploadOperations": [
+        {
+          "method": "PUT",
+          "url": "{UPLOAD_URL}",
+          "length": 12,
+          "offset": 0,
+          "requestHeaders": [
+            {"name": "Content-Type", "value": "image/png"}
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "data": {
+    "type": "appStoreVersions",
+    "id": "ver-1",
+    "attributes": {
+      "platform": "IOS",
+      "versionString": "1.2.3",
+      "appStoreState": "PREPARE_FOR_SUBMISSION",
+      "copyright": "© 2026 Acme",
+      "releaseType": "MANUAL",
+      "createdDate": "2026-04-10T10:00:00Z"
+    }
+  }
+}

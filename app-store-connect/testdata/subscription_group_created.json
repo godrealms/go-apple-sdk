@@ -1,0 +1,9 @@
+{
+  "data": {
+    "type": "subscriptionGroups",
+    "id": "grp-1",
+    "attributes": {
+      "referenceName": "Pro Plans"
+    }
+  }
+}

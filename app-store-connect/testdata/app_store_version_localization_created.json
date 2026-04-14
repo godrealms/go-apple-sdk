@@ -1,0 +1,15 @@
+{
+  "data": {
+    "type": "appStoreVersionLocalizations",
+    "id": "loc-1",
+    "attributes": {
+      "locale": "en-US",
+      "description": "Acme Widgets helps you spin widgets faster than ever.",
+      "keywords": "widgets,spin,productivity",
+      "marketingUrl": "https://acme.example/widgets",
+      "promotionalText": "New spinner engine!",
+      "supportUrl": "https://acme.example/support",
+      "whatsNew": "- Faster spinning\n- Bug fixes"
+    }
+  }
+}

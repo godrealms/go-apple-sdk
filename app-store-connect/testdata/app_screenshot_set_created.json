@@ -1,0 +1,9 @@
+{
+  "data": {
+    "type": "appScreenshotSets",
+    "id": "set-1",
+    "attributes": {
+      "screenshotDisplayType": "APP_IPHONE_67"
+    }
+  }
+}
