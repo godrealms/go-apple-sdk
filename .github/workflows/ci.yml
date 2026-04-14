@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Vet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+      - name: go build
+        run: go build ./...
+      - name: go vet
+        run: go vet ./...
+
+  lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62.2
+
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+      - name: go test
+        run: |
+          go test -race -covermode=atomic \
+            -coverprofile=coverage.out \
+            -coverpkg=./app-store-connect/... \
+            ./app-store-connect/...
+      - name: coverage gate
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep -E '^total:' | awk '{print $3}' | tr -d '%')
+          echo "app-store-connect coverage: ${COVERAGE}%"
+          MIN=80.0
+          awk -v c="$COVERAGE" -v m="$MIN" 'BEGIN { if (c+0 < m+0) { printf("coverage %s%% below threshold %s%%\n", c, m); exit 1 } }'
+      - name: upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-profile
+          path: coverage.out
+          if-no-files-found: error

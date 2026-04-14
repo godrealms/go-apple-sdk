@@ -27,7 +27,64 @@ type Config struct {
 	HTTPClient *http.Client
 	// UserAgent, when non-empty, is set as the User-Agent request header.
 	UserAgent string
+	// Logger, when non-nil, receives a structured record for each
+	// completed HTTP round trip. Leaving it nil silences the SDK.
+	// See [Logger] for the field semantics.
+	Logger Logger
 }
+
+// Logger is the minimal structured-logging hook exposed by the SDK.
+// It is intentionally small so callers can adapt any logging library
+// (slog, zap, logrus, stdlib log) without taking a hard dependency on
+// this package.
+//
+// Implementations should be safe for concurrent use — the SDK may
+// call Log from multiple goroutines when callers share a single
+// [Service] across requests.
+type Logger interface {
+	// Log is invoked once per HTTP round trip, after the response is
+	// read (or after a transport error). It receives a snapshot of
+	// the request/response metadata plus the wall-clock duration. The
+	// SDK never passes request or response bodies to the logger — if
+	// deeper instrumentation is needed, wrap the [http.Client] in
+	// [Config.HTTPClient] with a custom transport instead.
+	Log(record LogRecord)
+}
+
+// LogRecord describes a single HTTP round trip. Zero-valued fields
+// indicate "not available" — e.g. StatusCode is 0 when the transport
+// layer failed before receiving a response.
+type LogRecord struct {
+	// Method is the HTTP verb (GET, POST, etc.).
+	Method string
+	// URL is the full request URL including any resolved query.
+	URL string
+	// StatusCode is the HTTP status Apple returned. 0 on transport
+	// failure.
+	StatusCode int
+	// Duration measures the wall-clock time spent on the round trip,
+	// including body read.
+	Duration time.Duration
+	// Err is non-nil when the request failed — either a transport
+	// error or a non-2xx status parsed into an [APIError].
+	Err error
+}
+
+// LoggerFunc is an adapter that lets a plain function satisfy
+// [Logger]. Useful for one-off wiring without defining a type.
+//
+//	svc := AppStoreConnect.New(AppStoreConnect.Config{
+//	    Authorizer: auth,
+//	    Logger: AppStoreConnect.LoggerFunc(func(r AppStoreConnect.LogRecord) {
+//	        slog.Info("appstoreconnect",
+//	            "method", r.Method, "url", r.URL,
+//	            "status", r.StatusCode, "dur", r.Duration, "err", r.Err)
+//	    }),
+//	})
+type LoggerFunc func(LogRecord)
+
+// Log implements [Logger].
+func (f LoggerFunc) Log(r LogRecord) { f(r) }
 
 // Service is the entry point into App Store Connect API endpoints.
 // Create one with [New], or obtain one from the root SDK client via
@@ -39,6 +96,7 @@ type Service struct {
 	httpClient *http.Client
 	authorizer Authorizer
 	userAgent  string
+	logger     Logger
 
 	apps            *AppsService
 	reports         *ReportsService
@@ -81,6 +139,7 @@ func New(cfg Config) *Service {
 		httpClient: httpClient,
 		authorizer: cfg.Authorizer,
 		userAgent:  cfg.UserAgent,
+		logger:     cfg.Logger,
 	}
 	s.apps = &AppsService{svc: s}
 	s.reports = &ReportsService{svc: s}
@@ -199,6 +258,23 @@ func (s *Service) SubscriptionGroups() *SubscriptionGroupsService { return s.sub
 // BaseURL returns the service's base URL (without trailing slash).
 func (s *Service) BaseURL() string { return s.baseURL }
 
+// logRequest emits a [LogRecord] describing a completed round trip.
+// It is a no-op when no [Logger] is configured so the hot path costs
+// one nil check per request. The parameter is named reqURL rather
+// than url to avoid shadowing the imported net/url package.
+func (s *Service) logRequest(method, reqURL string, statusCode int, start time.Time, err error) {
+	if s.logger == nil {
+		return
+	}
+	s.logger.Log(LogRecord{
+		Method:     method,
+		URL:        reqURL,
+		StatusCode: statusCode,
+		Duration:   time.Since(start),
+		Err:        err,
+	})
+}
+
 // do performs an HTTP request and decodes a JSON response into out.
 // If the server returns a non-2xx status, do returns an [*APIError] parsed
 // from the response body.
@@ -207,23 +283,30 @@ func (s *Service) BaseURL() string { return s.baseURL }
 // or an absolute URL (e.g. an Apple pagination "next" link); both are
 // supported so paginators can follow cursor links verbatim.
 func (s *Service) do(ctx context.Context, method, path string, query *Query, body any, out any) (*http.Response, error) {
+	start := time.Now()
 	reqURL, err := s.resolveURL(path, query)
 	if err != nil {
-		return nil, &ClientError{Message: "invalid request URL", Cause: err}
+		wrapped := &ClientError{Message: "invalid request URL", Cause: err}
+		s.logRequest(method, path, 0, start, wrapped)
+		return nil, wrapped
 	}
 
 	var bodyReader io.Reader
 	if body != nil {
 		buf, err := json.Marshal(body)
 		if err != nil {
-			return nil, &ClientError{Message: "marshal request body", Cause: err}
+			wrapped := &ClientError{Message: "marshal request body", Cause: err}
+			s.logRequest(method, reqURL, 0, start, wrapped)
+			return nil, wrapped
 		}
 		bodyReader = bytes.NewReader(buf)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, reqURL, bodyReader)
 	if err != nil {
-		return nil, &ClientError{Message: "build request", Cause: err}
+		wrapped := &ClientError{Message: "build request", Cause: err}
+		s.logRequest(method, reqURL, 0, start, wrapped)
+		return nil, wrapped
 	}
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
@@ -233,29 +316,40 @@ func (s *Service) do(ctx context.Context, method, path string, query *Query, bod
 		req.Header.Set("User-Agent", s.userAgent)
 	}
 	if err := s.authorizer.Authorize(req); err != nil {
-		return nil, &ClientError{Message: "authorize request", Cause: err}
+		wrapped := &ClientError{Message: "authorize request", Cause: err}
+		s.logRequest(method, reqURL, 0, start, wrapped)
+		return nil, wrapped
 	}
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return nil, &ClientError{Message: "execute request", Cause: err}
+		wrapped := &ClientError{Message: "execute request", Cause: err}
+		s.logRequest(method, reqURL, 0, start, wrapped)
+		return nil, wrapped
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return resp, &ClientError{Message: "read response body", Cause: err}
+		wrapped := &ClientError{Message: "read response body", Cause: err}
+		s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
+		return resp, wrapped
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return resp, parseErrorBody(resp.StatusCode, respBody)
+		apiErr := parseErrorBody(resp.StatusCode, respBody)
+		s.logRequest(method, reqURL, resp.StatusCode, start, apiErr)
+		return resp, apiErr
 	}
 
 	if out != nil && len(respBody) > 0 {
 		if err := json.Unmarshal(respBody, out); err != nil {
-			return resp, &ClientError{Message: "decode response body", Cause: err}
+			wrapped := &ClientError{Message: "decode response body", Cause: err}
+			s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
+			return resp, wrapped
 		}
 	}
+	s.logRequest(method, reqURL, resp.StatusCode, start, nil)
 	return resp, nil
 }
 
@@ -275,14 +369,19 @@ func (s *Service) do(ctx context.Context, method, path string, query *Query, bod
 // Report endpoints serve JSON error bodies on failure, not gzipped
 // ones, so this treatment is correct.
 func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) (*http.Response, []byte, error) {
+	start := time.Now()
 	reqURL, err := s.resolveURL(path, query)
 	if err != nil {
-		return nil, nil, &ClientError{Message: "invalid request URL", Cause: err}
+		wrapped := &ClientError{Message: "invalid request URL", Cause: err}
+		s.logRequest(method, path, 0, start, wrapped)
+		return nil, nil, wrapped
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, reqURL, nil)
 	if err != nil {
-		return nil, nil, &ClientError{Message: "build request", Cause: err}
+		wrapped := &ClientError{Message: "build request", Cause: err}
+		s.logRequest(method, reqURL, 0, start, wrapped)
+		return nil, nil, wrapped
 	}
 	// Apple's report endpoints require this Accept header to serve
 	// the gzipped TSV payload.
@@ -291,22 +390,30 @@ func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) 
 		req.Header.Set("User-Agent", s.userAgent)
 	}
 	if err := s.authorizer.Authorize(req); err != nil {
-		return nil, nil, &ClientError{Message: "authorize request", Cause: err}
+		wrapped := &ClientError{Message: "authorize request", Cause: err}
+		s.logRequest(method, reqURL, 0, start, wrapped)
+		return nil, nil, wrapped
 	}
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return nil, nil, &ClientError{Message: "execute request", Cause: err}
+		wrapped := &ClientError{Message: "execute request", Cause: err}
+		s.logRequest(method, reqURL, 0, start, wrapped)
+		return nil, nil, wrapped
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return resp, nil, &ClientError{Message: "read response body", Cause: err}
+		wrapped := &ClientError{Message: "read response body", Cause: err}
+		s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
+		return resp, nil, wrapped
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return resp, nil, parseErrorBody(resp.StatusCode, respBody)
+		apiErr := parseErrorBody(resp.StatusCode, respBody)
+		s.logRequest(method, reqURL, resp.StatusCode, start, apiErr)
+		return resp, nil, apiErr
 	}
 
 	// Apple reports ship the gzip as the payload itself — not as
@@ -317,15 +424,20 @@ func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) 
 	if strings.Contains(ct, "gzip") || isGzipped(respBody) {
 		zr, err := gzip.NewReader(bytes.NewReader(respBody))
 		if err != nil {
-			return resp, nil, &ClientError{Message: "open gzip stream", Cause: err}
+			wrapped := &ClientError{Message: "open gzip stream", Cause: err}
+			s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
+			return resp, nil, wrapped
 		}
 		defer zr.Close()
 		decoded, err := io.ReadAll(zr)
 		if err != nil {
-			return resp, nil, &ClientError{Message: "decompress gzip stream", Cause: err}
+			wrapped := &ClientError{Message: "decompress gzip stream", Cause: err}
+			s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
+			return resp, nil, wrapped
 		}
 		respBody = decoded
 	}
+	s.logRequest(method, reqURL, resp.StatusCode, start, nil)
 	return resp, respBody, nil
 }
 

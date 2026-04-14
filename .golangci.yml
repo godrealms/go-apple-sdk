@@ -1,0 +1,74 @@
+# golangci-lint configuration for go-apple-sdk.
+#
+# The ruleset intentionally leans toward the defaults that ship with
+# recent golangci-lint releases. We stick to correctness and
+# maintainability linters and avoid whitespace/style bikeshedding so
+# reviews can focus on actual issues.
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck       # unchecked errors
+    - govet          # suspicious constructs
+    - ineffassign    # dead assignments
+    - staticcheck    # extensive correctness checks
+    - unused         # unused code
+    - gofmt          # standard formatting
+    - goimports      # import grouping + formatting
+    - misspell       # common English typos
+    - bodyclose      # http.Response.Body close checks
+    - revive         # stylistic + idiomatic issues (replaces golint)
+
+linters-settings:
+  revive:
+    severity: warning
+    rules:
+      - name: exported
+        disabled: false
+        arguments:
+          - checkPrivateReceivers
+          - disableStutteringCheck
+      - name: var-naming
+      - name: context-as-argument
+      - name: error-return
+      - name: error-strings
+      - name: if-return
+      - name: indent-error-flow
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: unreachable-code
+
+  misspell:
+    locale: US
+
+issues:
+  # Examples are intentionally informal and exist outside the library
+  # surface we hold to the strict bar.
+  exclude-dirs:
+    - examples
+  # Don't bail on pre-existing issues in the App Store Server code
+  # (which predates this SDK's stricter lint ruleset). New code in
+  # app-store-connect/ is held to the full bar.
+  exclude-rules:
+    - path: app-store-server/
+      linters:
+        - revive
+        - staticcheck
+    - path: app-store-server-notifications/
+      linters:
+        - revive
+        - staticcheck
+    - path: types/
+      linters:
+        - revive
+        - staticcheck
+    # Test fixtures and helpers intentionally use "_" receivers, etc.
+    - path: _test\.go
+      linters:
+        - revive

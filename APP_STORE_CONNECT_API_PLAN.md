@@ -98,15 +98,16 @@ App Store Connect API 是一个极其庞大且复杂的 REST API 系统，包含
 ### 阶段五：工程化规范与社区生态 (Engineering & OSS)
 **目标**：打造生产级可用、文档详尽、易于开源社区贡献的高质量 Go 项目。
 
-- [ ] **完善使用文档 (Documentation)**
-  - 编写包含丰富示例的 `README.md` 和 GoDoc 注释。
-  - 为 App Store Connect API 的不同模块提供详细的使用教程。
-- [ ] **CI 流水线建设 (GitHub Actions)**
-  - 配置 `golangci-lint` 保证代码风格一致性（如强制 `snake_case` 文件命名）。
-  - 自动运行单元测试并统计代码覆盖率（目标覆盖率 > 80%）。
-- [ ] **健壮性与可观测性**
-  - 增加结构化的日志输出选项。
-  - 提供 Context 支持，允许用户控制请求超时和取消 (`req.SetContext(ctx)`)。
+- [x] **完善使用文档 (Documentation)**
+  - `README.md` 全量重写：新增目录、两大模块分章节、18 个 Service 模块清单、Query Builder / 错误处理 / 分页 / 结构化日志实战示例、常用场景（版本提审、截图上传、TestFlight 分发、销售报表）和 10 个可跑的 `examples/` 入口。
+  - Service / Logger / Config 等导出符号增加 GoDoc 注释，`revive` 的 `exported` 规则开启且无告警。
+- [x] **CI 流水线建设 (GitHub Actions)**
+  - `.github/workflows/ci.yml` 三段式流水线：`build & vet` / `golangci-lint v1.62.2` / `test & coverage`；触发条件为 push/PR → main。
+  - `.golangci.yml` 精选 errcheck / govet / staticcheck / ineffassign / unused / gofmt / goimports / misspell / bodyclose / revive，legacy 目录（`app-store-server/`、`types/`）按路径豁免，新代码 `app-store-connect/` 按全量规则要求。
+  - 覆盖率 gate 以 awk 对比 80% 阈值，并上传 `coverage.out` artifact；`go test -race -covermode=atomic -coverpkg=./app-store-connect/...` 持续兜底并发/数据竞争。
+- [x] **健壮性与可观测性**
+  - `AppStoreConnect.Logger` / `LogRecord` / `LoggerFunc` 结构化日志 Hook：无日志库硬依赖，一次调用即可对接 slog / zap / logrus；`do()` 与 `doRaw()` 全部进出路径（URL 解析、序列化、鉴权、传输、解压、非 2xx）都统一走 `logRequest` 埋点。
+  - 所有 App Store Connect API 方法以 `context.Context` 作为第一参数，支持 per-request 超时与取消；默认 `http.Client` 30s 超时，用户可自定义。
 
 ---
 
