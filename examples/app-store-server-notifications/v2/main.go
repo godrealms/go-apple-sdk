@@ -1,8 +1,9 @@
 package main
 
 import (
-	AppStoreNotifications "github.com/godrealms/go-apple-sdk/app-store-server-notifications"
 	"log"
+
+	AppStoreNotifications "github.com/godrealms/go-apple-sdk/app-store-server-notifications"
 )
 
 func main() {
@@ -32,15 +33,14 @@ func main() {
 	log.Println("Data.Status: ", notifications.Data.Status)
 
 	renewalInfo, renewalInfoErr := notifications.Data.SignedRenewalInfo.Decrypt()
-	if err != nil {
+	if renewalInfoErr != nil {
 		log.Fatal(renewalInfoErr)
 	}
 	log.Printf("Data.SignedRenewalInfo: %+v\n", renewalInfo)
 
 	transaction, transactionErr := notifications.Data.SignedTransactionInfo.Decrypt()
-	if err != nil {
+	if transactionErr != nil {
 		log.Fatal(transactionErr)
 	}
 	log.Printf("Data.SignedTransactionInfo: %+v\n", transaction)
-
 }
