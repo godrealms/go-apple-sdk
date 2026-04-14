@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "apps",
+    "id": "1234567890",
+    "attributes": {
+      "name": "Acme Widgets",
+      "bundleId": "com.acme.widgets",
+      "sku": "ACME-WIDGETS-001",
+      "primaryLocale": "en-US",
+      "isOrEverWasMadeForKids": false,
+      "contentRightsDeclaration": "DOES_NOT_USE_THIRD_PARTY_CONTENT"
+    },
+    "relationships": {
+      "appStoreVersions": {
+        "data": [
+          { "type": "appStoreVersions", "id": "v-1" },
+          { "type": "appStoreVersions", "id": "v-2" }
+        ]
+      },
+      "ciProduct": {
+        "data": { "type": "ciProducts", "id": "ci-xyz" }
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/apps/1234567890"
+    }
+  },
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps/1234567890"
+  }
+}

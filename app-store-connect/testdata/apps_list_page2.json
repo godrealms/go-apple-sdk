@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "type": "apps",
+      "id": "5555555555",
+      "attributes": {
+        "name": "Acme Legacy",
+        "bundleId": "com.acme.legacy",
+        "sku": "ACME-LEGACY-001",
+        "primaryLocale": "en-US",
+        "isOrEverWasMadeForKids": false
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/apps/5555555555"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps?cursor=CURSOR_PAGE_2&limit=2"
+  },
+  "meta": {
+    "paging": {
+      "total": 3,
+      "limit": 2
+    }
+  }
+}

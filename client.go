@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	AppStoreConnect "github.com/godrealms/go-apple-sdk/app-store-connect"
 	"github.com/godrealms/go-apple-sdk/types"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -121,17 +123,19 @@ func (client *Client) SetService(service AppleClient) *Client {
 	client.service = service
 	switch service {
 	case AppStoreConnectClient:
-		client.config.BaseUrl = ""
-		if client.sandbox {
-			client.config.BaseUrl = ""
-		}
+		// App Store Connect API shares a single host for production and sandbox.
+		// See https://developer.apple.com/documentation/appstoreconnectapi
+		client.config.BaseUrl = "https://api.appstoreconnect.apple.com"
 	case AppStoreServerClient:
 		client.config.BaseUrl = "https://api.storekit.itunes.apple.com"
 		if client.sandbox {
 			client.config.BaseUrl = "https://api.storekit-sandbox.itunes.apple.com"
 		}
 	case AppStoreServerNotificationsClient:
-		client.config.BaseUrl = "https://api.appstoreconnect.apple.com"
+		// App Store Server Notifications V2 uses the same host family as
+		// App Store Server API (storekit.itunes.apple.com / storekit-sandbox).
+		// See https://developer.apple.com/documentation/appstoreservernotifications
+		client.config.BaseUrl = "https://api.storekit.itunes.apple.com"
 		if client.sandbox {
 			client.config.BaseUrl = "https://api.storekit-sandbox.itunes.apple.com"
 		}
@@ -424,4 +428,63 @@ func (client *Client) handleError(resp *resty.Response) error {
 	}
 
 	return nil
+}
+
+// AppStoreConnect returns a service for calling the App Store Connect API.
+// It is a thin factory that injects this client's JWT signer as the
+// authorizer on every outgoing request. Each call returns a fresh
+// service; the service is safe for concurrent use.
+//
+// Example:
+//
+//	svc := client.AppStoreConnect()
+//	apps, err := svc.Apps().List(ctx, AppStoreConnect.NewQuery().Limit(200))
+//
+// See https://developer.apple.com/documentation/appstoreconnectapi for
+// a full catalog of available endpoints.
+func (client *Client) AppStoreConnect() *AppStoreConnect.Service {
+	return AppStoreConnect.New(AppStoreConnect.Config{
+		BaseURL:   "https://api.appstoreconnect.apple.com",
+		UserAgent: "go-apple-sdk",
+		Authorizer: AppStoreConnect.AuthorizerFunc(func(req *http.Request) error {
+			token, err := client.signAppStoreConnectToken()
+			if err != nil {
+				return err
+			}
+			req.Header.Set("Authorization", "Bearer "+token)
+			return nil
+		}),
+	})
+}
+
+// signAppStoreConnectToken builds an unscoped App Store Connect JWT that
+// is valid for any endpoint. Apple permits tokens up to 20 minutes old;
+// we mint a fresh one on every request rather than caching, which keeps
+// the signer simple and stateless at the cost of a few extra signatures
+// per call.
+//
+// Distinct from [Client.GenerateAppStoreConnectAuthorizationJWT], which
+// includes a scoped "scope" claim tied to a specific method+endpoint.
+// Scoped tokens are stricter than needed for most endpoints and can
+// cause unexpected 401s, so the new AppStoreConnect.Service path uses
+// this unscoped variant instead.
+func (client *Client) signAppStoreConnectToken() (string, error) {
+	privateKey, err := types.ParsePrivateKey(client.config.PrivateKey)
+	if err != nil {
+		return "", fmt.Errorf("parse private key: %w", err)
+	}
+	now := time.Now()
+	claims := jwt.MapClaims{
+		"iss": client.config.Iss,
+		"iat": now.Unix(),
+		"exp": now.Add(20 * time.Minute).Unix(),
+		"aud": "appstoreconnect-v1",
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token.Header["kid"] = client.config.Kid
+	signed, err := token.SignedString(privateKey)
+	if err != nil {
+		return "", fmt.Errorf("sign token: %w", err)
+	}
+	return signed, nil
 }

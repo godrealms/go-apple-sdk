@@ -1,0 +1,11 @@
+{
+  "errors": [
+    {
+      "id": "1234-abcd",
+      "status": "403",
+      "code": "FORBIDDEN_ERROR",
+      "title": "This request is forbidden for security reasons",
+      "detail": "The API key is not authorized for this endpoint."
+    }
+  ]
+}
