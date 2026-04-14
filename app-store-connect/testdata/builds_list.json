@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "type": "builds",
+      "id": "build-1",
+      "attributes": {
+        "version": "100",
+        "uploadedDate": "2025-03-10T08:15:00Z",
+        "expirationDate": "2025-06-10T08:15:00Z",
+        "expired": false,
+        "minOsVersion": "16.0",
+        "processingState": "VALID",
+        "buildAudienceType": "APP_STORE_ELIGIBLE",
+        "usesNonExemptEncryption": false
+      }
+    },
+    {
+      "type": "builds",
+      "id": "build-2",
+      "attributes": {
+        "version": "99",
+        "processingState": "VALID"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/builds?limit=2"
+  }
+}

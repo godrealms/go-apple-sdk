@@ -1,0 +1,19 @@
+{
+  "data": {
+    "type": "betaGroups",
+    "id": "bg-1",
+    "attributes": {
+      "name": "QA Team",
+      "isInternalGroup": true,
+      "hasAccessToAllBuilds": true,
+      "publicLinkEnabled": false,
+      "feedbackEnabled": true,
+      "createdDate": "2025-03-01T10:00:00Z"
+    },
+    "relationships": {
+      "app": {
+        "data": { "type": "apps", "id": "1234567890" }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "data": {
+    "type": "builds",
+    "id": "build-1",
+    "attributes": {
+      "version": "100",
+      "expired": true,
+      "processingState": "VALID"
+    }
+  }
+}

@@ -68,17 +68,18 @@ App Store Connect API 是一个极其庞大且复杂的 REST API 系统，包含
 ### 阶段三：CI/CD 与 TestFlight 自动化 (DevOps Automation)
 **目标**：赋能开发团队，支持将 SDK 集成到 CI/CD 流水线（如 GitHub Actions, Jenkins）中。
 
-- [ ] **TestFlight 构建与测试管理**
-  - 获取和管理构建版本 (`GET /v1/builds`, `PATCH /v1/builds/{id}`)
-  - 管理测试群组 (`GET/POST /v1/betaGroups`)
-  - 邀请内部/外部测试人员 (`POST /v1/betaTesterInvitations`)
-- [ ] **证书与描述文件管理 (Provisioning)**
-  - 管理 Bundle ID (`GET/POST /v1/bundleIds`)
-  - 查询和管理证书 (`GET /v1/certificates`)
-  - 管理 Provisioning Profiles (`GET/POST /v1/profiles`)
-- [ ] **用户与权限管理 (Users & Roles)**
-  - 查询团队成员及权限 (`GET /v1/users`)
-  - 发送团队邀请 (`POST /v1/userInvitations`)
+- [x] **TestFlight 构建与测试管理**
+  - 获取和管理构建版本 (`GET /v1/builds`, `PATCH /v1/builds/{id}`) —— `BuildsService.List` / `Get` / `ListIterator` / `ListAll` / `Update` + `NewBuildUpdate()` Builder
+  - 管理测试群组 (`GET/POST /v1/betaGroups`) —— `BetaGroupsService.List` / `Get` / `Create` / `Delete` / `AddBuilds` / `AddBetaTesters`（后两者操作 JSON:API relationships 子资源）
+  - 邀请测试人员 (`POST /v1/betaTesterInvitations`) —— `BetaTesterInvitationsService.Create`
+- [x] **证书与描述文件管理 (Provisioning)**
+  - 管理 Bundle ID (`GET/POST/DELETE /v1/bundleIds`) —— `BundleIDsService.List` / `Get` / `Create` / `Delete`
+  - 查询和管理证书 (`GET/POST/DELETE /v1/certificates`) —— `CertificatesService.List` / `Get` / `Create`（base64 CSR）/ `Delete`
+  - 管理 Provisioning Profiles (`GET/POST/DELETE /v1/profiles`) —— `ProfilesService.List` / `Get` / `Create`（自动绑定 bundleId / certificates / devices 关系）/ `Delete`
+- [x] **用户与权限管理 (Users & Roles)**
+  - 查询团队成员及权限 (`GET /v1/users`, `PATCH /v1/users/{id}`, `DELETE /v1/users/{id}`) —— `UsersService` + `NewUserUpdate()` Builder（Roles / AllAppsVisible / ProvisioningAllowed）
+  - 发送团队邀请 (`GET/POST/DELETE /v1/userInvitations`) —— `UserInvitationsService.Create` 支持 `visibleApps` 关系
+  - 阶段三结束包 coverage 85.4%
 
 ### 阶段四：App Store 提审与元数据自动化 (Store Submission)
 **目标**：实现类似 `fastlane deliver` 的全自动 App Store 提审流和商品管理。

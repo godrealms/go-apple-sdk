@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "type": "users",
+      "id": "user-1",
+      "attributes": {
+        "username": "alice@example.com",
+        "firstName": "Alice",
+        "lastName": "Apple",
+        "roles": ["ADMIN"],
+        "allAppsVisible": true,
+        "provisioningAllowed": true
+      }
+    },
+    {
+      "type": "users",
+      "id": "user-2",
+      "attributes": {
+        "username": "bob@example.com",
+        "firstName": "Bob",
+        "lastName": "Banana",
+        "roles": ["DEVELOPER"],
+        "allAppsVisible": false,
+        "provisioningAllowed": false
+      }
+    }
+  ]
+}

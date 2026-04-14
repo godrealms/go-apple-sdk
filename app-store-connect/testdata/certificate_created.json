@@ -1,0 +1,15 @@
+{
+  "data": {
+    "type": "certificates",
+    "id": "cert-1",
+    "attributes": {
+      "name": "Acme iOS Distribution",
+      "certificateType": "IOS_DISTRIBUTION",
+      "displayName": "Acme",
+      "serialNumber": "01A2B3C4D5",
+      "platform": "IOS",
+      "expirationDate": "2026-03-01T00:00:00Z",
+      "certificateContent": "MIIE..."
+    }
+  }
+}

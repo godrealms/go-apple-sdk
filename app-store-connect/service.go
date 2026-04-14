@@ -43,6 +43,15 @@ type Service struct {
 	apps            *AppsService
 	reports         *ReportsService
 	customerReviews *CustomerReviewsService
+
+	builds                *BuildsService
+	betaGroups            *BetaGroupsService
+	betaTesterInvitations *BetaTesterInvitationsService
+	bundleIDs             *BundleIDsService
+	certificates          *CertificatesService
+	profiles              *ProfilesService
+	users                 *UsersService
+	userInvitations       *UserInvitationsService
 }
 
 // New constructs a [Service] with the given configuration.
@@ -68,6 +77,14 @@ func New(cfg Config) *Service {
 	s.apps = &AppsService{svc: s}
 	s.reports = &ReportsService{svc: s}
 	s.customerReviews = &CustomerReviewsService{svc: s}
+	s.builds = &BuildsService{svc: s}
+	s.betaGroups = &BetaGroupsService{svc: s}
+	s.betaTesterInvitations = &BetaTesterInvitationsService{svc: s}
+	s.bundleIDs = &BundleIDsService{svc: s}
+	s.certificates = &CertificatesService{svc: s}
+	s.profiles = &ProfilesService{svc: s}
+	s.users = &UsersService{svc: s}
+	s.userInvitations = &UserInvitationsService{svc: s}
 	return s
 }
 
@@ -84,6 +101,43 @@ func (s *Service) Reports() *ReportsService { return s.reports }
 // customer reviews and posting developer responses.
 // See https://developer.apple.com/documentation/appstoreconnectapi/customer_reviews
 func (s *Service) CustomerReviews() *CustomerReviewsService { return s.customerReviews }
+
+// Builds returns the Builds sub-service for TestFlight build management.
+// See https://developer.apple.com/documentation/appstoreconnectapi/builds
+func (s *Service) Builds() *BuildsService { return s.builds }
+
+// BetaGroups returns the BetaGroups sub-service for managing TestFlight
+// tester groups.
+// See https://developer.apple.com/documentation/appstoreconnectapi/beta_groups
+func (s *Service) BetaGroups() *BetaGroupsService { return s.betaGroups }
+
+// BetaTesterInvitations returns the sub-service for sending TestFlight
+// invitation emails.
+// See https://developer.apple.com/documentation/appstoreconnectapi/beta_tester_invitations
+func (s *Service) BetaTesterInvitations() *BetaTesterInvitationsService {
+	return s.betaTesterInvitations
+}
+
+// BundleIDs returns the Bundle IDs sub-service.
+// See https://developer.apple.com/documentation/appstoreconnectapi/bundle_ids
+func (s *Service) BundleIDs() *BundleIDsService { return s.bundleIDs }
+
+// Certificates returns the Certificates sub-service.
+// See https://developer.apple.com/documentation/appstoreconnectapi/certificates
+func (s *Service) Certificates() *CertificatesService { return s.certificates }
+
+// Profiles returns the provisioning Profiles sub-service.
+// See https://developer.apple.com/documentation/appstoreconnectapi/profiles
+func (s *Service) Profiles() *ProfilesService { return s.profiles }
+
+// Users returns the Users sub-service for managing team members.
+// See https://developer.apple.com/documentation/appstoreconnectapi/users
+func (s *Service) Users() *UsersService { return s.users }
+
+// UserInvitations returns the UserInvitations sub-service for
+// sending team invitations.
+// See https://developer.apple.com/documentation/appstoreconnectapi/user_invitations
+func (s *Service) UserInvitations() *UserInvitationsService { return s.userInvitations }
 
 // BaseURL returns the service's base URL (without trailing slash).
 func (s *Service) BaseURL() string { return s.baseURL }

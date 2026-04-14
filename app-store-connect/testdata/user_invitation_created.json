@@ -1,0 +1,15 @@
+{
+  "data": {
+    "type": "userInvitations",
+    "id": "inv-1",
+    "attributes": {
+      "email": "carol@example.com",
+      "firstName": "Carol",
+      "lastName": "Cherry",
+      "expirationDate": "2025-04-10T12:00:00Z",
+      "roles": ["DEVELOPER"],
+      "allAppsVisible": true,
+      "provisioningAllowed": false
+    }
+  }
+}

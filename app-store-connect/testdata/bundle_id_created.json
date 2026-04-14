@@ -1,0 +1,12 @@
+{
+  "data": {
+    "type": "bundleIds",
+    "id": "bid-1",
+    "attributes": {
+      "identifier": "com.acme.widgets",
+      "name": "Acme Widgets",
+      "platform": "IOS",
+      "seedId": "ABC123XYZ0"
+    }
+  }
+}

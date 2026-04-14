@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "profiles",
+    "id": "prof-1",
+    "attributes": {
+      "name": "Acme Distribution",
+      "platform": "IOS",
+      "profileContent": "MIIO...",
+      "uuid": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+      "createdDate": "2025-03-02T12:00:00Z",
+      "profileState": "ACTIVE",
+      "profileType": "IOS_APP_STORE",
+      "expirationDate": "2026-03-02T12:00:00Z"
+    }
+  }
+}
