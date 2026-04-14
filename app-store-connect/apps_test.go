@@ -2,7 +2,9 @@ package AppStoreConnect
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -183,6 +185,122 @@ func TestAppsService_ListAll(t *testing.T) {
 	}
 	if len(all) != 3 {
 		t.Errorf("len = %d, want 3", len(all))
+	}
+}
+
+func TestAppsService_Update(t *testing.T) {
+	var captured struct {
+		method      string
+		path        string
+		contentType string
+		body        map[string]any
+	}
+	svc, _ := newTestService(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		captured.method = r.Method
+		captured.path = r.URL.Path
+		captured.contentType = r.Header.Get("Content-Type")
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &captured.body)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(loadFixture(t, "app_updated.json"))
+	}))
+
+	upd := NewAppUpdate().
+		PrimaryLocale("en-GB").
+		AvailableInNewTerritories(true).
+		ContentRightsDeclaration("USES_THIRD_PARTY_CONTENT")
+
+	app, err := svc.Apps().Update(context.Background(), "1234567890", upd)
+	if err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+
+	if captured.method != "PATCH" {
+		t.Errorf("method = %q", captured.method)
+	}
+	if captured.path != "/v1/apps/1234567890" {
+		t.Errorf("path = %q", captured.path)
+	}
+	if !strings.Contains(captured.contentType, "application/json") {
+		t.Errorf("Content-Type = %q", captured.contentType)
+	}
+
+	data, ok := captured.body["data"].(map[string]any)
+	if !ok {
+		t.Fatalf("body.data missing: %+v", captured.body)
+	}
+	if data["type"] != "apps" {
+		t.Errorf("data.type = %v", data["type"])
+	}
+	if data["id"] != "1234567890" {
+		t.Errorf("data.id = %v", data["id"])
+	}
+	attrs, _ := data["attributes"].(map[string]any)
+	if attrs["primaryLocale"] != "en-GB" {
+		t.Errorf("attributes.primaryLocale = %v", attrs["primaryLocale"])
+	}
+	if attrs["availableInNewTerritories"] != true {
+		t.Errorf("attributes.availableInNewTerritories = %v", attrs["availableInNewTerritories"])
+	}
+	if attrs["contentRightsDeclaration"] != "USES_THIRD_PARTY_CONTENT" {
+		t.Errorf("attributes.contentRightsDeclaration = %v", attrs["contentRightsDeclaration"])
+	}
+
+	if app.Attributes.PrimaryLocale != "en-GB" {
+		t.Errorf("app.PrimaryLocale = %q", app.Attributes.PrimaryLocale)
+	}
+}
+
+func TestAppsService_Update_Validation(t *testing.T) {
+	svc := New(Config{BaseURL: "http://example", Authorizer: noopAuthorizer})
+	if _, err := svc.Apps().Update(context.Background(), "", NewAppUpdate().PrimaryLocale("en-US")); err == nil {
+		t.Error("expected error for empty id")
+	}
+	if _, err := svc.Apps().Update(context.Background(), "1", nil); err == nil {
+		t.Error("expected error for nil update")
+	}
+	if _, err := svc.Apps().Update(context.Background(), "1", NewAppUpdate()); err == nil {
+		t.Error("expected error for empty update")
+	}
+}
+
+func TestAppUpdate_SetArbitraryAttribute(t *testing.T) {
+	u := NewAppUpdate().Set("customKey", "customValue")
+	if u.IsEmpty() {
+		t.Error("IsEmpty = true, want false after Set")
+	}
+	if u.attrs["customKey"] != "customValue" {
+		t.Errorf("custom attr not recorded: %+v", u.attrs)
+	}
+}
+
+func TestAppUpdate_BuilderCoverage(t *testing.T) {
+	// Exercises every setter so future refactors don't silently drop
+	// one. Each setter is a thin one-liner, so a smoke test here is
+	// sufficient — behavior is covered by the Update HTTP test above.
+	u := NewAppUpdate().
+		PrimaryLocale("en-US").
+		BundleId("com.acme.widgets").
+		AvailableInNewTerritories(false).
+		ContentRightsDeclaration("DOES_NOT_USE_THIRD_PARTY_CONTENT").
+		SubscriptionStatusUrl("https://example.com/notify").
+		SubscriptionStatusUrlVersion("V2").
+		SubscriptionStatusUrlForSandbox("https://sandbox.example.com/notify").
+		SubscriptionStatusUrlVersionForSandbox("V2")
+	cases := map[string]any{
+		"primaryLocale":                          "en-US",
+		"bundleId":                               "com.acme.widgets",
+		"availableInNewTerritories":              false,
+		"contentRightsDeclaration":               "DOES_NOT_USE_THIRD_PARTY_CONTENT",
+		"subscriptionStatusUrl":                  "https://example.com/notify",
+		"subscriptionStatusUrlVersion":           "V2",
+		"subscriptionStatusUrlForSandbox":        "https://sandbox.example.com/notify",
+		"subscriptionStatusUrlVersionForSandbox": "V2",
+	}
+	for k, want := range cases {
+		if got := u.attrs[k]; got != want {
+			t.Errorf("attrs[%q] = %v, want %v", k, got, want)
+		}
 	}
 }
 

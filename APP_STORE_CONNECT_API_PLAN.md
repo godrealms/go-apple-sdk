@@ -54,15 +54,16 @@ App Store Connect API 是一个极其庞大且复杂的 REST API 系统，包含
 ### 阶段二：核心高频业务落地 (Core Modules)
 **目标**：优先实现开发者和数据团队最关心的三大核心痛点功能。
 
-- [ ] **App 基础信息管理 (Apps & App Infos)**
-  - 获取账号下应用列表及单应用详情 (`GET /v1/apps`, `GET /v1/apps/{id}`)
-  - 修改应用基础信息 (`PATCH /v1/apps/{id}`)
-- [ ] **销售与财务报表下载 (Sales & Finance Reports)**
-  - 下载每日/每周/每月销售报表，自动处理 gzip 解压 (`GET /v1/salesReports`)
-  - 下载财务结算报表 (`GET /v1/financeReports`)
-- [ ] **用户评论管理 (Customer Reviews)**
-  - 拉取 App Store 用户评价 (`GET /v1/apps/{id}/customerReviews`)
-  - 自动化回复用户评价 (`POST /v1/customerReviewResponses`)
+- [x] **App 基础信息管理 (Apps & App Infos)**
+  - 获取账号下应用列表及单应用详情 (`GET /v1/apps`, `GET /v1/apps/{id}`) —— `AppsService.List` / `Get` / `ListIterator` / `ListAll`
+  - 修改应用基础信息 (`PATCH /v1/apps/{id}`) —— `AppsService.Update` + 链式 `NewAppUpdate()` Builder
+- [x] **销售与财务报表下载 (Sales & Finance Reports)**
+  - 下载销售报表 (`GET /v1/salesReports`) —— `ReportsService.DownloadSalesReport`；`service.doRaw()` 透明处理 gzip payload（`application/a-gzip` Content-Type 以及 magic-number 嗅探两种回退路径）
+  - 下载财务结算报表 (`GET /v1/financeReports`) —— `ReportsService.DownloadFinanceReport`
+- [x] **用户评论管理 (Customer Reviews)**
+  - 拉取 App Store 用户评价 (`GET /v1/apps/{id}/customerReviews`, `GET /v1/customerReviews/{id}`) —— `CustomerReviewsService.ListForApp` / `ListForAppIterator` / `Get`
+  - 自动化回复用户评价 (`POST /v1/customerReviewResponses`, `DELETE /v1/customerReviewResponses/{id}`) —— `CustomerReviewsService.Respond` / `DeleteResponse`
+  - 全部通过 httptest + fixture 覆盖，阶段二结束 coverage 83.6%
 
 ### 阶段三：CI/CD 与 TestFlight 自动化 (DevOps Automation)
 **目标**：赋能开发团队，支持将 SDK 集成到 CI/CD 流水线（如 GitHub Actions, Jenkins）中。

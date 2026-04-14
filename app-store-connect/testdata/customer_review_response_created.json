@@ -1,0 +1,19 @@
+{
+  "data": {
+    "type": "customerReviewResponses",
+    "id": "resp-1",
+    "attributes": {
+      "responseBody": "Thanks for the feedback! Please contact support@acme.com so we can help.",
+      "lastModifiedDate": "2025-03-03T15:45:00Z",
+      "state": "PENDING_PUBLISH"
+    },
+    "relationships": {
+      "review": {
+        "data": { "type": "customerReviews", "id": "review-2" }
+      }
+    },
+    "links": {
+      "self": "https://api.appstoreconnect.apple.com/v1/customerReviewResponses/resp-1"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "data": [
+    {
+      "type": "customerReviews",
+      "id": "review-1",
+      "attributes": {
+        "rating": 5,
+        "title": "Great app",
+        "body": "Love it.",
+        "reviewerNickname": "Alice",
+        "createdDate": "2025-03-01T12:00:00Z",
+        "territory": "USA"
+      },
+      "links": {
+        "self": "https://api.appstoreconnect.apple.com/v1/customerReviews/review-1"
+      }
+    },
+    {
+      "type": "customerReviews",
+      "id": "review-2",
+      "attributes": {
+        "rating": 1,
+        "title": "Bug",
+        "body": "Crashes on launch.",
+        "reviewerNickname": "Bob",
+        "createdDate": "2025-03-02T09:30:00Z",
+        "territory": "USA"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps/1234567890/customerReviews?limit=2",
+    "next": "https://api.appstoreconnect.apple.com/v1/apps/1234567890/customerReviews?cursor=CURSOR_PAGE_2&limit=2"
+  }
+}

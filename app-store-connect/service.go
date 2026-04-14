@@ -2,6 +2,7 @@ package AppStoreConnect
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"io"
@@ -39,7 +40,9 @@ type Service struct {
 	authorizer Authorizer
 	userAgent  string
 
-	apps *AppsService
+	apps            *AppsService
+	reports         *ReportsService
+	customerReviews *CustomerReviewsService
 }
 
 // New constructs a [Service] with the given configuration.
@@ -63,12 +66,24 @@ func New(cfg Config) *Service {
 		userAgent:  cfg.UserAgent,
 	}
 	s.apps = &AppsService{svc: s}
+	s.reports = &ReportsService{svc: s}
+	s.customerReviews = &CustomerReviewsService{svc: s}
 	return s
 }
 
 // Apps returns the Apps sub-service for managing apps on App Store Connect.
 // See https://developer.apple.com/documentation/appstoreconnectapi/apps
 func (s *Service) Apps() *AppsService { return s.apps }
+
+// Reports returns the Reports sub-service for downloading sales and
+// finance reports.
+// See https://developer.apple.com/documentation/appstoreconnectapi/download_sales_and_trends_reports
+func (s *Service) Reports() *ReportsService { return s.reports }
+
+// CustomerReviews returns the CustomerReviews sub-service for reading
+// customer reviews and posting developer responses.
+// See https://developer.apple.com/documentation/appstoreconnectapi/customer_reviews
+func (s *Service) CustomerReviews() *CustomerReviewsService { return s.customerReviews }
 
 // BaseURL returns the service's base URL (without trailing slash).
 func (s *Service) BaseURL() string { return s.baseURL }
@@ -131,6 +146,83 @@ func (s *Service) do(ctx context.Context, method, path string, query *Query, bod
 		}
 	}
 	return resp, nil
+}
+
+// doRaw performs an HTTP request and returns the raw (optionally
+// gunzipped) response body. It is used by endpoints that return binary
+// or non-JSON payloads — notably the sales and finance report
+// endpoints, which serve gzipped TSV under Content-Type
+// "application/a-gzip".
+//
+// If the server responds with Content-Encoding: gzip, Go's http package
+// already transparently decodes the stream. If the response is instead
+// a gzip *payload* (Apple's reports) — identified by Content-Type —
+// doRaw gunzips it before returning. Callers can therefore treat the
+// returned bytes as plain TSV.
+//
+// Non-2xx responses are parsed via [parseErrorBody] into an [APIError].
+// Report endpoints serve JSON error bodies on failure, not gzipped
+// ones, so this treatment is correct.
+func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) (*http.Response, []byte, error) {
+	reqURL, err := s.resolveURL(path, query)
+	if err != nil {
+		return nil, nil, &ClientError{Message: "invalid request URL", Cause: err}
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, reqURL, nil)
+	if err != nil {
+		return nil, nil, &ClientError{Message: "build request", Cause: err}
+	}
+	// Apple's report endpoints require this Accept header to serve
+	// the gzipped TSV payload.
+	req.Header.Set("Accept", "application/a-gzip, application/json")
+	if s.userAgent != "" {
+		req.Header.Set("User-Agent", s.userAgent)
+	}
+	if err := s.authorizer.Authorize(req); err != nil {
+		return nil, nil, &ClientError{Message: "authorize request", Cause: err}
+	}
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return nil, nil, &ClientError{Message: "execute request", Cause: err}
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return resp, nil, &ClientError{Message: "read response body", Cause: err}
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return resp, nil, parseErrorBody(resp.StatusCode, respBody)
+	}
+
+	// Apple reports ship the gzip as the payload itself — not as
+	// transport encoding — so http.Client will not decode it. Detect
+	// via Content-Type (application/a-gzip) or a magic-number sniff
+	// so we can transparently hand the caller plain TSV bytes.
+	ct := resp.Header.Get("Content-Type")
+	if strings.Contains(ct, "gzip") || isGzipped(respBody) {
+		zr, err := gzip.NewReader(bytes.NewReader(respBody))
+		if err != nil {
+			return resp, nil, &ClientError{Message: "open gzip stream", Cause: err}
+		}
+		defer zr.Close()
+		decoded, err := io.ReadAll(zr)
+		if err != nil {
+			return resp, nil, &ClientError{Message: "decompress gzip stream", Cause: err}
+		}
+		respBody = decoded
+	}
+	return resp, respBody, nil
+}
+
+// isGzipped returns true if the given buffer begins with the gzip magic
+// number (0x1f 0x8b). Used as a fallback when Content-Type is missing
+// or lies about the payload format.
+func isGzipped(b []byte) bool {
+	return len(b) >= 2 && b[0] == 0x1f && b[1] == 0x8b
 }
 
 // resolveURL converts a path plus optional query into an absolute URL.
