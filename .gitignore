@@ -23,3 +23,18 @@ go.work.sum
 
 # env file
 .env
+.env.*
+
+# Secrets / private keys (never commit)
+*.p8
+*.pem
+*.key
+*.pfx
+*.p12
+secrets/
+credentials/
+
+# macOS / IDE
+.DS_Store
+.idea/
+.vscode/
