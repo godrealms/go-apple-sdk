@@ -58,6 +58,9 @@ type LogRecord struct {
 	// Method is the HTTP verb (GET, POST, etc.).
 	Method string
 	// URL is the full request URL including any resolved query.
+	// When the SDK fails to build the URL (e.g. malformed path passed
+	// to a paginator), this field falls back to the raw input path so
+	// operators still see *something* actionable in their logs.
 	URL string
 	// StatusCode is the HTTP status Apple returned. 0 on transport
 	// failure.

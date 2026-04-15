@@ -390,6 +390,8 @@ if err != nil {
 
 所有可运行示例都在 `examples/` 下。每个子目录是一个独立的 `main` 包，填入自己的凭据即可编译运行：
 
+### App Store Connect API
+
 - `examples/app-store-connect/apps-list` — 列出账号下的所有应用
 - `examples/app-store-connect/apps-update` — 更新应用基础信息
 - `examples/app-store-connect/sales-report` — 下载销售报表
@@ -400,6 +402,20 @@ if err != nil {
 - `examples/app-store-connect/version-submit` — 创建版本、写 Release Notes、提交审核
 - `examples/app-store-connect/screenshot-upload` — 一次调用完成 Apple 三步上传流程
 - `examples/app-store-connect/iap-create` — 创建非订阅 IAP 和订阅组
+
+### App Store Server API
+
+- `examples/app-store-server/notifications-testing` — 请求 Apple 发送测试通知 + 查询状态
+- `examples/app-store-server/transaction-info` — 查询单笔交易详情
+- `examples/app-store-server/transaction-history` — 按订阅分组翻页拉取交易历史
+- `examples/app-store-server/subscription-status` — 查询订阅状态
+- `examples/app-store-server/consumption-info` — 上报消费信息配合退款决策
+- `examples/app-store-server/order-lookup` — 根据订单号反查交易
+- `examples/app-store-server/refund-history` — 拉取退款历史
+
+### App Store Server Notifications v2
+
+- `examples/app-store-server-notifications/v2` — 解析并校验 Apple 推送的 JWS 通知
 
 ## API 文档
 
