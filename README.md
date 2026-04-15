@@ -423,15 +423,13 @@ if err != nil {
 
 ## 贡献
 
-欢迎提交 Pull Request 和 Issue！在提交 PR 之前，请确保：
+欢迎提交 Pull Request 和 Issue！在提交 PR 之前，请本地自测以下命令全部通过：
 
-1. `go build ./...`、`go vet ./...`、`go test ./...` 全部通过
-2. `golangci-lint run` 无新增告警（配置见 `.golangci.yml`）
+1. `go build ./...`、`go vet ./...`、`go test -race ./...` 全部通过
+2. `golangci-lint run`（配置见 `.golangci.yml`，可选，用于进一步的静态检查）
 3. 新增的 `app-store-connect` 功能附带 httptest + fixture 驱动的测试
 4. 整个 `app-store-connect` 包的测试覆盖率保持在 80% 以上
 5. 更新相关文档和示例
-
-CI 会在 GitHub Actions 上跑 build / vet / lint / test + coverage gate，流程定义在 `.github/workflows/ci.yml`。
 
 ## 许可证
 
