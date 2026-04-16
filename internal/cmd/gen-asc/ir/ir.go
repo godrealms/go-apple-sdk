@@ -28,6 +28,10 @@ type Resource struct {
 	Name       string         `json:"name"`       // Go: "AnalyticsReports"
 	APIName    string         `json:"api_name"`   // OpenAPI: "analyticsReports"
 	DocURL     string         `json:"doc_url,omitempty"`
+	// Operations enumerates every HTTP endpoint on this resource.
+	// A Resource with no operations is a parser bug; we deliberately
+	// omit the omitempty tag so dump-ir surfaces it as "null" instead
+	// of silently dropping the key.
 	Operations []Operation    `json:"operations"`
 	Attrs      []Field        `json:"attrs,omitempty"`
 	Rels       []Relationship `json:"rels,omitempty"`
