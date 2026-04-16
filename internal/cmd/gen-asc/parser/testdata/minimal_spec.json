@@ -1,0 +1,45 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "App Store Connect API (fixture)",
+    "version": "9.9.9"
+  },
+  "paths": {
+    "/v1/apps": {
+      "get": {
+        "operationId": "apps-get_collection",
+        "tags": ["Apps"],
+        "summary": "List Apps",
+        "externalDocs": { "url": "https://example.test/apps/list" }
+      }
+    },
+    "/v1/apps/{id}": {
+      "get": {
+        "operationId": "apps-get_instance",
+        "tags": ["Apps"],
+        "summary": "Read App Information",
+        "externalDocs": { "url": "https://example.test/apps/get" }
+      },
+      "patch": {
+        "operationId": "apps-update_instance",
+        "tags": ["Apps"],
+        "summary": "Modify an App"
+      },
+      "delete": {
+        "operationId": "apps-delete_instance",
+        "tags": ["Apps"],
+        "summary": "Delete an App"
+      }
+    },
+    "/v1/analyticsReports": {
+      "get": {
+        "operationId": "analyticsReports-get_collection",
+        "tags": ["AnalyticsReports"],
+        "summary": "List Analytics Reports"
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}
