@@ -10,6 +10,7 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -82,7 +83,8 @@ func decodeRaw(data []byte) (*rawSpec, error) {
 // extractResources groups paths by their first "/v1/<resource>"
 // segment. Each group becomes one ir.Resource. Operations within the
 // group are attached with canonical names derived from HTTP verb +
-// path shape (List/Get/Create/Update/Delete/ListRelated/UpdateRelated).
+// path shape (List/Get/Create/Update/Replace/Delete) plus a
+// verb+PascalCase(tail) fallback for sub-resource paths.
 func extractResources(raw *rawSpec) []ir.Resource {
 	groups := make(map[string][]pathOp)
 	for pathTmpl, rawItem := range raw.Paths {
@@ -92,8 +94,10 @@ func extractResources(raw *rawSpec) []ir.Resource {
 		}
 		var item rawPathItem
 		if err := json.Unmarshal(rawItem, &item); err != nil {
-			// Skip malformed path items rather than failing the whole
-			// parse; Task 11 will surface any real surprises.
+			// Generator-grade input: log the malformed path so Task 11's
+			// smoke run produces a visible signal, but keep going so a
+			// single bad item doesn't tank the whole parse.
+			log.Printf("parser: skipping malformed path item %q: %v", pathTmpl, err)
 			continue
 		}
 		for verb, op := range verbOps(&item) {
@@ -212,12 +216,21 @@ func operationName(apiName string, po pathOp) string {
 	case po.Path == base+"/{id}" && po.Verb == "DELETE":
 		return "Delete"
 	}
-	// Fallback: verb + tail after the resource name.
+	// Fallback: verb + PascalCase(tail) where tail excludes any path
+	// parameter segments. {id} segments add no semantic value to a Go
+	// method name — "modify the appInfos relationship for an app" should
+	// be UpdateRelationshipsAppInfos, not UpdateIDRelationshipsAppInfos.
 	tail := strings.TrimPrefix(po.Path, base)
-	tail = strings.ReplaceAll(tail, "/", " ")
-	tail = strings.ReplaceAll(tail, "{", "")
-	tail = strings.ReplaceAll(tail, "}", "")
-	words := strings.Fields(tail)
+	var words []string
+	for _, seg := range strings.Split(tail, "/") {
+		if seg == "" {
+			continue
+		}
+		if strings.HasPrefix(seg, "{") && strings.HasSuffix(seg, "}") {
+			continue // skip path-parameter segments
+		}
+		words = append(words, seg)
+	}
 	var b strings.Builder
 	b.WriteString(verbPrefix(po.Verb))
 	for _, w := range words {

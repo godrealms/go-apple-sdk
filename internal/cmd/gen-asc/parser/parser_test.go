@@ -29,8 +29,29 @@ func TestParse_MinimalFixture(t *testing.T) {
 	if got, want := apps.Name, "Apps"; got != want {
 		t.Errorf("apps.Name = %q, want %q", got, want)
 	}
-	if got, want := len(apps.Operations), 4; got != want {
+	if got, want := len(apps.Operations), 5; got != want {
 		t.Errorf("apps ops = %d, want %d", got, want)
+	}
+
+	// Assert each operation's name/verb/path so a regression in
+	// operationName cannot silently pass.
+	wantOps := []struct {
+		Name, HTTPMethod, PathTemplate string
+	}{
+		{"List", "GET", "/v1/apps"},
+		{"Delete", "DELETE", "/v1/apps/{id}"},
+		{"Get", "GET", "/v1/apps/{id}"},
+		{"Update", "PATCH", "/v1/apps/{id}"},
+		{"GetRelationshipsAppInfos", "GET", "/v1/apps/{id}/relationships/appInfos"},
+	}
+	if len(apps.Operations) == len(wantOps) {
+		for i, w := range wantOps {
+			got := apps.Operations[i]
+			if got.Name != w.Name || got.HTTPMethod != w.HTTPMethod || got.PathTemplate != w.PathTemplate {
+				t.Errorf("apps.Operations[%d] = (%q,%q,%q), want (%q,%q,%q)",
+					i, got.Name, got.HTTPMethod, got.PathTemplate, w.Name, w.HTTPMethod, w.PathTemplate)
+			}
+		}
 	}
 
 	reports := findResource(t, doc.Resources, "analyticsReports")
