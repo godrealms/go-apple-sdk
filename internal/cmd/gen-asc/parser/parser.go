@@ -16,19 +16,49 @@ import (
 
 	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/ir"
 	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/naming"
+	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/skip"
 )
 
-// Parse turns OpenAPI JSON bytes into an *ir.Document. It returns an
-// error on malformed JSON or structural surprises (e.g. missing
-// "paths" key). Metadata is left to the caller — Parse only handles
-// spec contents.
-func Parse(data []byte) (*ir.Document, error) {
+// Option tunes Parse behavior. Options compose via successive calls.
+type Option func(*options)
+
+type options struct {
+	skip *skip.Set
+}
+
+// WithSkipSet filters out resources whose API name appears in set.
+// A nil set means "skip nothing", matching the default.
+func WithSkipSet(set *skip.Set) Option {
+	return func(o *options) { o.skip = set }
+}
+
+// Parse turns OpenAPI JSON bytes into an *ir.Document. See
+// package-level docs for a description of each stage.
+func Parse(data []byte, opts ...Option) (*ir.Document, error) {
+	cfg := &options{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
 	raw, err := decodeRaw(data)
 	if err != nil {
 		return nil, err
 	}
 	resources := extractResources(raw)
+	if cfg.skip != nil {
+		resources = filterSkipped(resources, cfg.skip)
+	}
 	return &ir.Document{Resources: resources}, nil
+}
+
+func filterSkipped(rs []ir.Resource, set *skip.Set) []ir.Resource {
+	out := rs[:0]
+	for _, r := range rs {
+		if set.Contains(r.APIName) {
+			continue
+		}
+		out = append(out, r)
+	}
+	return out
 }
 
 // rawSpec is a minimal-surface OpenAPI 3 document — only the fields
