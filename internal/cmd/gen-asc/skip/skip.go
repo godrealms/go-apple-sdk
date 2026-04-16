@@ -1,8 +1,10 @@
 // Package skip loads the "hand-written services" exclusion list from
 // a plain-text file. Each non-blank, non-comment line is treated as an
 // OpenAPI resource name (lowerCamel). Comments start with "#" and
-// extend to end-of-line. Leading/trailing whitespace on each line is
-// trimmed. Duplicates are silently collapsed.
+// extend to end-of-line — a "#" anywhere on a line begins a comment,
+// so resource names may not contain "#" (Apple's lowerCamel schema
+// never does). Leading/trailing whitespace on each line is trimmed.
+// Duplicates are silently collapsed.
 //
 // The file format is deliberately minimal to avoid pulling in a YAML
 // dependency for what is fundamentally a string list.
