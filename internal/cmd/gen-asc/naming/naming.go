@@ -12,6 +12,9 @@ import "unicode"
 // function on already-PascalCase input. Empty input returns empty
 // output.
 //
+// Input contract: s must be lowerCamelCase. Inputs containing "-" or "_"
+// are out of scope and will produce invalid Go identifiers.
+//
 // Acronym handling (URL / ID / …) lives in applyAcronyms and is
 // applied as a post-processing step so the rules stay in one place.
 func PascalCase(s string) string {
@@ -23,9 +26,12 @@ func PascalCase(s string) string {
 	return applyAcronyms(string(runes))
 }
 
-// CamelCase is the inverse of PascalCase: "AnalyticsReports" →
-// "analyticsReports". Used when the generator needs to emit the
-// JSON-tag value from a Go field name.
+// CamelCase lowercases the first rune of s, turning Go PascalCase
+// identifiers such as "AnalyticsReports" into JSON-tag values such
+// as "analyticsReports". It is NOT the inverse of PascalCase once
+// Task 3's acronym carve-outs are active: CamelCase(PascalCase("appId"))
+// is not guaranteed to equal "appId". Use it only for emitting JSON
+// tags from a Go field name you already know is safe.
 func CamelCase(s string) string {
 	if s == "" {
 		return ""

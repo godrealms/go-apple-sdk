@@ -31,6 +31,7 @@ func TestCamelCase(t *testing.T) {
 	}{
 		{"AnalyticsReports", "analyticsReports"},
 		{"App", "app"},
+		{"A", "a"},
 		{"", ""},
 	}
 	for _, c := range cases {
