@@ -108,14 +108,24 @@ App Store Connect API 是一个极其庞大且复杂的 REST API 系统，包含
   - `AppStoreConnect.Logger` / `LogRecord` / `LoggerFunc` 结构化日志 Hook：无日志库硬依赖，一次调用即可对接 slog / zap / logrus；`do()` 与 `doRaw()` 全部进出路径（URL 解析、序列化、鉴权、传输、解压、非 2xx）都统一走 `logRequest` 埋点。
   - 所有 App Store Connect API 方法以 `context.Context` 作为第一参数，支持 per-request 超时与取消；默认 `http.Client` 30s 超时，用户可自定义。
 
+### 阶段六：全量 API 覆盖（进行中）
+**目标**：基于 `docs/superpowers/specs/2026-04-16-asc-full-coverage-design.md` 把 18 个手写 Service 之外的所有 Apple 资源通过 codegen 补齐。
+
+- [x] **6.1 Generator 脚手架**：`internal/cmd/gen-asc/` 可运行，`go run ./internal/cmd/gen-asc -mode=list` 列出所有非 skip 的 Apple 资源；`-mode=dump-ir` 产出完整 IR JSON。vendor 了 Apple 官方 OpenAPI spec 并用 SHA256 锁定。Phase 6.1 findings 记录在 `docs/superpowers/notes/2026-04-16-phase-6.1-spec-findings.md`（真实 spec：v4.3，184 资源、1102 operations、923 paths、1337 schemas；内部工具 parser 覆盖率 94.7%）。**关键发现**：`apps` / `builds` / `appStoreVersions` 等手写资源的 sub-path 总计 251 个 operation 被粗粒度 skip 一刀切吞掉，Phase 6.2 必须先决定 skip 粒度策略（path-prefix vs. sub-type auto-carving）再开生成。
+- [ ] **6.2 类型生成**：从 IR 生成 `zz_generated_types.go`，覆盖所有非 skip 资源的 attributes / relationships。
+- [ ] **6.3 Service 生成**：每个非 skip 资源生成 `zz_generated_<resource>.go` + Service wiring。
+- [ ] **6.4 Smoke test + Golden**：每个 gen 方法一个 smoke test + 一份 golden 清单 + round-trip 校验。
+- [ ] **6.5 首次全量 gen + 迭代修复**：跑完整生成，解决命名 / 类型冲突直到 `go build ./...` 与 `go test -race ./...` 全绿。
+- [ ] **6.6 Makefile / go:generate / 文档**：`make gen` `make update-spec` `//go:generate` 指令 + README / PLAN 收尾。
+
 ---
 
 ## 🚀 行动指南 (Next Steps)
 
-为了稳步推进本计划，建议严格按照阶段顺序执行。**当前的当务之急是启动「阶段一」**：
+阶段一至阶段五已经上线，SDK 覆盖了官方文档的 18 个精品 Service。当前重心转向 **阶段六：全量 API 覆盖**——用 `internal/cmd/gen-asc` 生成器把剩余 164 个 Apple 资源（约 851 个 operation）用 codegen 补齐。
 
-1. **清理历史包袱**: 修复 `examples/` 目录的编译错误。
-2. **基建代码提交**: 在 `types/` 下建立 JSON:API 相关的基础结构体。
-3. **完成探路接口**: 在 `app-store-connect/` 目录下完成 `Apps` 服务的骨架并实现 `GET /v1/apps`。
+1. **决策 skip 粒度**：阅读 `docs/superpowers/notes/2026-04-16-phase-6.1-spec-findings.md` 的"⚠ Critical finding"章节，在 (a) 路径前缀组合 skip 和 (b) sub-type auto-carving 之间做出选择，再开 Phase 6.2 规划。
+2. **Phase 6.2 规划**：基于决策产出 `docs/superpowers/plans/YYYY-MM-DD-asc-phase-6.2-types-generation.md`。
+3. **Phase 6.2 实施**：类型渲染器 + `components.schemas` / `$ref` 解析落地。
 
 *(本文档将随着开发的推进进行持续更新和状态追踪。)*
