@@ -40,3 +40,27 @@ func TestCamelCase(t *testing.T) {
 		}
 	}
 }
+
+func TestPascalCase_Acronyms(t *testing.T) {
+	cases := []struct {
+		in, want string
+	}{
+		{"bundleId", "BundleID"},
+		{"appId", "AppID"},
+		{"purchaseUrl", "PurchaseURL"},
+		{"subscriptionStatusUrl", "SubscriptionStatusURL"},
+		{"apiKey", "APIKey"},
+		{"jsonWebToken", "JSONWebToken"},
+		{"isJwtExpired", "IsJWTExpired"},
+		{"jwtToken", "JWTToken"},
+		// Acronym at end-of-word only: should NOT eat substrings of
+		// longer words. "widget" must stay "Widget", not "WIDGetIDen".
+		{"widget", "Widget"},
+		{"idle", "Idle"},
+	}
+	for _, c := range cases {
+		if got := PascalCase(c.in); got != c.want {
+			t.Errorf("PascalCase(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
