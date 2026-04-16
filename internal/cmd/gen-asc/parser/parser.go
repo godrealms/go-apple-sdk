@@ -51,7 +51,10 @@ func Parse(data []byte, opts ...Option) (*ir.Document, error) {
 }
 
 func filterSkipped(rs []ir.Resource, set *skip.Set) []ir.Resource {
-	out := rs[:0]
+	// Allocate a fresh slice rather than reusing rs[:0] — the latter
+	// silently mutates the caller's backing array if they ever keep
+	// a reference, which is a well-known footgun in code review.
+	out := make([]ir.Resource, 0, len(rs))
 	for _, r := range rs {
 		if set.Contains(r.APIName) {
 			continue
