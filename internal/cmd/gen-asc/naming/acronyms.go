@@ -1,6 +1,9 @@
 package naming
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
 // acronyms lists tokens that must stay fully uppercase in Go
 // identifiers. They are matched at word boundaries: a "word" starts
@@ -17,10 +20,10 @@ var acronyms = []string{
 	"ID",
 }
 
-// applyAcronyms upper-cases any trailing acronym in a PascalCase
-// word. It scans word-by-word (word = leading capital + following
-// lowercase letters/digits) and rewrites each word's tail if it ends
-// with one of the listed acronyms in any case.
+// applyAcronyms upper-cases any word whose entire content equals one
+// of the listed acronyms. It scans word-by-word (word = leading
+// capital + following lowercase letters/digits) and rewrites each
+// word in isolation.
 //
 // Examples (inputs are already PascalCase because PascalCase runs
 // first):
@@ -28,7 +31,8 @@ var acronyms = []string{
 //	"BundleId"              -> "BundleID"
 //	"SubscriptionStatusUrl" -> "SubscriptionStatusURL"
 //	"IsJwtExpired"          -> "IsJWTExpired"
-//	"Widget"                -> "Widget"  (no tail acronym)
+//	"Rapid"                 -> "Rapid"  (no exact-match word)
+//	"Widget"                -> "Widget"
 func applyAcronyms(s string) string {
 	if s == "" {
 		return s
@@ -51,7 +55,7 @@ func splitPascalWords(s string) []string {
 	var out []string
 	start := 0
 	for i := 1; i < len(runes); i++ {
-		if isUpper(runes[i]) && isLower(runes[i-1]) {
+		if unicode.IsUpper(runes[i]) && unicode.IsLower(runes[i-1]) {
 			out = append(out, string(runes[start:i]))
 			start = i
 		}
@@ -60,24 +64,22 @@ func splitPascalWords(s string) []string {
 	return out
 }
 
-// rewriteTailAcronym checks whether a single word ends with one of
-// the acronyms (case-insensitive) and upper-cases that tail.
+// rewriteTailAcronym upper-cases a word if and only if the entire
+// word equals one of the listed acronyms (case-insensitively).
+// splitPascalWords already isolates words at PascalCase boundaries,
+// so an acronym must BE a word, not just end one — otherwise
+// "rapid" would become "RapID" because "id" is a suffix of "rapid".
 //
-//	"Url"      -> "URL"
-//	"AppId"    -> "AppID"
-//	"Idle"     -> "Idle"  (trailing "le" doesn't match)
-//	"Widget"   -> "Widget"
+//	"Url"    -> "URL"   (exact match)
+//	"Id"     -> "ID"    (exact match)
+//	"Rapid"  -> "Rapid" (no exact match; "id" is a suffix, not a word)
+//	"Widget" -> "Widget"
 func rewriteTailAcronym(word string) string {
 	lower := strings.ToLower(word)
 	for _, a := range acronyms {
-		la := strings.ToLower(a)
-		if strings.HasSuffix(lower, la) && len(word) >= len(la) {
-			head := word[:len(word)-len(la)]
-			return head + a
+		if lower == strings.ToLower(a) {
+			return a
 		}
 	}
 	return word
 }
-
-func isUpper(r rune) bool { return r >= 'A' && r <= 'Z' }
-func isLower(r rune) bool { return r >= 'a' && r <= 'z' }
