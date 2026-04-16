@@ -11,6 +11,9 @@
 # Test binary, built with `go test -c`
 *.test
 
+# Generator tool binary (built from internal/cmd/gen-asc by `go build ./...`)
+/gen-asc
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
