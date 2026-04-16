@@ -1,0 +1,10 @@
+# skip list fixture — exercises blanks, comments, whitespace
+
+apps
+
+# hand-written DevOps services
+builds
+   customerReviews
+
+# duplicate to verify set semantics
+apps

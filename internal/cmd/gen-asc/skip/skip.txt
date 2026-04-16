@@ -1,0 +1,44 @@
+# internal/cmd/gen-asc/skip/skip.txt
+#
+# 这些资源由手写精品 Service 覆盖，generator 跳过不生成。
+# 新增手写 Service 时同步追加到这里；删除手写 Service 时从这里移除。
+# 条目粒度 = OpenAPI 资源名（lowerCamel），不是 Go 命名。
+# 一个手写 Service 可以占多行。
+
+# AppsService
+apps
+
+# AppStoreVersions family
+appStoreVersions
+appStoreVersionSubmissions
+appStoreVersionLocalizations
+
+# Screenshots upload flow (AppScreenshotSetsService + AppScreenshotsService)
+appScreenshotSets
+appScreenshots
+
+# TestFlight (BuildsService + BetaGroupsService + BetaTesterInvitationsService)
+builds
+betaGroups
+betaTesterInvitations
+
+# Provisioning (BundleIDsService + CertificatesService + ProfilesService)
+bundleIds
+certificates
+profiles
+
+# Users & invitations (UsersService + UserInvitationsService)
+users
+userInvitations
+
+# CustomerReviewsService handles both resources
+customerReviews
+customerReviewResponses
+
+# ReportsService handles both resources
+salesReports
+financeReports
+
+# InAppPurchasesService + SubscriptionGroupsService
+inAppPurchases
+subscriptionGroups
