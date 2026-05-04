@@ -228,6 +228,49 @@ if errors.As(err, &clientErr) {
 }
 ```
 
+### JWS 验签错误处理
+
+所有 JWS 解密路径（`SignedPayload.DecodedPayload`、`JWSTransaction.Decrypt`、`JWSRenewalInfo.Decrypt`）都会校验证书链回到 Apple Root CA G3，并强制 leaf cert 携带 Apple receipt-signing OID。失败时返回 `*jws.VerificationError`：
+
+```go
+import (
+    "errors"
+
+    "github.com/godrealms/go-apple-sdk/jws"
+    AppStoreNotifications "github.com/godrealms/go-apple-sdk/app-store-server-notifications"
+)
+
+payload, err := AppStoreNotifications.SignedPayload(raw).DecodedPayload()
+if err != nil {
+    var ve *jws.VerificationError
+    if errors.As(err, &ve) {
+        switch ve.Reason {
+        case jws.ReasonExpired:
+            // 证书过期 —— 通常是 SDK 该升级了
+        case jws.ReasonChain:
+            // 链验证失败 —— 可能是攻击或配置错
+        case jws.ReasonOID:
+            // leaf cert 缺少 Apple OID
+        case jws.ReasonSignature:
+            // 签名不对（payload 被改？）
+        case jws.ReasonStructure:
+            // JWS 格式坏（含 alg 不是 ES256）
+        }
+    }
+    return err
+}
+```
+
+测试中需要使用自签证书时（mock Apple 通知），用 `DecodedPayloadWith` / `DecryptWith` 配合自定义 `*jws.Verifier`：
+
+```go
+v := jws.NewVerifier(
+    jws.WithRootCAs(myTestPool),
+    jws.WithRequiredOIDs(jws.OIDAppleReceiptSigning),
+)
+payload, err := AppStoreNotifications.SignedPayload(raw).DecodedPayloadWith(v)
+```
+
 ### 分页
 
 所有 `List*` 方法都有同名的 `*Iterator` / `*ListAll` 变体：
