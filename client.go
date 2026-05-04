@@ -55,24 +55,31 @@ type RequestParams struct {
 	Files       map[string]string // Files to upload (key: field name, value: file path)
 }
 
-// NewClient creates a new instance of the Apple service client
+// NewClient creates a new instance of the Apple service client.
+//
+// The returned client is fully initialised: it has a working
+// resty.Client with sane defaults (timeout, retries from
+// [Config]) and any caller-supplied [ClientOption]s applied.
+// Service-specific configuration (base URL, JWT middleware) is
+// installed on demand via [Client.SetService].
 func NewClient(Sandbox bool, kid, iss, bid, privateKey string, opts ...ClientOption) *Client {
 	client := &Client{
 		sandbox:     Sandbox,
 		config:      NewConfig(kid, iss, bid, privateKey),
 		middlewares: make([]Middleware, 0),
 	}
-
-	if client.service != "" {
-		// Initialize base HTTP client
-		client.resetHttpClient()
-
-		// Apply custom configurations
-		for _, opt := range opts {
-			opt(client)
-		}
+	// Always initialise the underlying resty.Client and apply
+	// caller options. The previous version gated this behind
+	// `if client.service != ""`, which was always false here
+	// (service is the zero-value empty string at this point),
+	// so resetHttpClient never ran from NewClient and ClientOption
+	// values silently went nowhere. SetService later called
+	// resetHttpClient on its own which masked the nil-deref hazard
+	// in practice — but ClientOption was effectively dead.
+	client.resetHttpClient()
+	for _, opt := range opts {
+		opt(client)
 	}
-
 	return client
 }
 
@@ -149,79 +156,92 @@ func (client *Client) SetService(service AppleClient) *Client {
 
 // Service-specific handlers
 func (client *Client) handleAppStoreConnect(req *resty.Request) error {
-	// Implement AppStoreConnect authentication and request handling
-	req.SetHeader("Authorization", client.GenerateAppStoreConnectAuthorizationJWT(req.Method, req.URL))
+	auth, err := client.GenerateAppStoreConnectAuthorizationJWT(req.Method, req.URL)
+	if err != nil {
+		return fmt.Errorf("appstoreconnect authorization: %w", err)
+	}
+	req.SetHeader("Authorization", auth)
 	return nil
 }
 
 func (client *Client) handleAppStoreServer(req *resty.Request) error {
-	// Implement AppStoreServer authentication and request handling
-	req.SetHeader("Authorization", client.GenerateAppStoreServerAuthorizationJWT())
+	auth, err := client.GenerateAppStoreServerAuthorizationJWT()
+	if err != nil {
+		return fmt.Errorf("appstoreserver authorization: %w", err)
+	}
+	req.SetHeader("Authorization", auth)
 	return nil
 }
 
 func (client *Client) handleAppStoreNotifications(req *resty.Request) error {
-	// Implement AppStoreNotifications authentication and request handling
-	req.SetHeader("Authorization", client.GenerateAppStoreServerAuthorizationJWT())
+	auth, err := client.GenerateAppStoreServerAuthorizationJWT()
+	if err != nil {
+		return fmt.Errorf("appstoreservernotifications authorization: %w", err)
+	}
+	req.SetHeader("Authorization", auth)
 	return nil
 }
 
-func (client *Client) GenerateAppStoreServerAuthorizationJWT() string {
+// GenerateAppStoreServerAuthorizationJWT builds an "Bearer …" JWT
+// header value for App Store Server API + Server Notifications
+// requests. Returns a wrapped error on private-key parse failure
+// or signing failure rather than silently producing an empty
+// header (the previous behaviour, which led to mysterious 401s
+// from Apple instead of clear local errors).
+func (client *Client) GenerateAppStoreServerAuthorizationJWT() (string, error) {
 	privateKey, err := types.ParsePrivateKey(client.config.PrivateKey)
 	if err != nil {
-		log.Printf("failed to parse private key: %v", err)
-		return ""
+		return "", fmt.Errorf("parse private key: %w", err)
 	}
-	// 创建 JWT 的 Header 和 Claims
 	now := time.Now()
 	claims := jwt.MapClaims{
-		"iss": client.config.Iss,               // Apple Team ID
-		"iat": now.Unix(),                      // CURRENT TIMESTAMP
-		"exp": now.Add(5 * time.Minute).Unix(), // Expiration time (30 minutes)
-		"aud": "appstoreconnect-v1",            // Fixed value appstoreconnect-v1
+		"iss": client.config.Iss,
+		"iat": now.Unix(),
+		"exp": now.Add(5 * time.Minute).Unix(),
+		"aud": "appstoreconnect-v1",
 		"bid": client.config.Bid,
 	}
-	// 创建 JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-	token.Header["kid"] = client.config.Kid // Set Header's kid (key ID)
-
-	// 使用私钥签名
+	token.Header["kid"] = client.config.Kid
 	signedToken, err := token.SignedString(privateKey)
 	if err != nil {
-		log.Println("failed to sign token: ", err.Error())
-		return ""
+		return "", fmt.Errorf("sign token: %w", err)
 	}
-	return fmt.Sprintf("Bearer %s", signedToken)
+	return fmt.Sprintf("Bearer %s", signedToken), nil
 }
 
-func (client *Client) GenerateAppStoreConnectAuthorizationJWT(method string, endpoint string) string {
+// GenerateAppStoreConnectAuthorizationJWT builds a "Bearer …" JWT
+// header value scoped to a single (method, endpoint) pair. Returns
+// a wrapped error rather than an empty string on failure.
+//
+// Most callers should use [Client.AppStoreConnect] instead, which
+// goes through the new App Store Connect [Service] with an
+// unscoped JWT — Apple permits 20-minute unscoped tokens, and the
+// scoped variant produced here can cause unexpected 401s when
+// callers pass the URL with query parameters that Apple's
+// authoriser does not normalise the same way the SDK does.
+func (client *Client) GenerateAppStoreConnectAuthorizationJWT(method string, endpoint string) (string, error) {
 	privateKey, err := types.ParsePrivateKey(client.config.PrivateKey)
 	if err != nil {
-		log.Printf("failed to parse private key: %v", err)
-		return ""
+		return "", fmt.Errorf("parse private key: %w", err)
 	}
-	// 创建 JWT 的 Header 和 Claims
 	now := time.Now()
 	claims := jwt.MapClaims{
-		"iss": client.config.Iss,               // Apple Team ID
-		"iat": now.Unix(),                      // CURRENT TIMESTAMP
-		"exp": now.Add(5 * time.Minute).Unix(), // Expiration time (30 minutes)
-		"aud": "appstoreconnect-v1",            // Fixed value appstoreconnect-v1
+		"iss": client.config.Iss,
+		"iat": now.Unix(),
+		"exp": now.Add(5 * time.Minute).Unix(),
+		"aud": "appstoreconnect-v1",
 		"scope": []string{
 			fmt.Sprintf("%s %s", method, endpoint),
 		},
 	}
-	// 创建 JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-	token.Header["kid"] = client.config.Kid // Set Header's kid (key ID)
-
-	// 使用私钥签名
+	token.Header["kid"] = client.config.Kid
 	signedToken, err := token.SignedString(privateKey)
 	if err != nil {
-		log.Println("failed to sign token: ", err.Error())
-		return ""
+		return "", fmt.Errorf("sign token: %w", err)
 	}
-	return fmt.Sprintf("Bearer %s", signedToken)
+	return fmt.Sprintf("Bearer %s", signedToken), nil
 }
 
 // Request is the main method for making HTTP requests

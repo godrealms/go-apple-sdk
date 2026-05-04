@@ -105,13 +105,16 @@ type ConsumptionRequest struct {
 // SendConsumptionInformation
 // Send consumption information about a consumable in-app purchase or auto-renewable subscription
 // to the App Store after your server receives a consumption request notification.
+//
+// Apple returns 202 Accepted with no body on success, so no Result
+// is set. The previous code passed `Result: &result` where result
+// was a *string — which would silently corrupt any future error
+// responses Apple started returning.
 func SendConsumptionInformation(client *Apple.Client, transactionId string, body *ConsumptionRequest) error {
-	var result = ""
 	client.SetService(Apple.AppStoreServerClient)
 	params := Apple.RequestParams{
 		Method: "PUT",
 		Path:   "/inApps/v1/transactions/consumption/{transactionId}",
-		Result: &result,
 		Headers: map[string]string{
 			"Accept": "application/json",
 		},

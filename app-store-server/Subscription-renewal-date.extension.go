@@ -121,11 +121,15 @@ func ExtendSubscriptionRenewalDatesForAllActiveSubscribers(client *Apple.Client,
 }
 
 // GetStatusOfSubscriptionRenewalDateExtensions Checks whether a renewal date extension request completed, and provides the final count of successful or failed extensions.
+//
+// Per Apple's documentation this endpoint is GET, not PUT — the
+// previous PUT was a transcription error and would have produced
+// a 405 Method Not Allowed from Apple if anyone had ever called it.
 func GetStatusOfSubscriptionRenewalDateExtensions(client *Apple.Client, productId string, requestIdentifier string) (*MassExtendRenewalDateStatusResponse, error) {
 	client.SetService(Apple.AppStoreServerClient)
 	var result = new(MassExtendRenewalDateStatusResponse)
 	params := Apple.RequestParams{
-		Method: "PUT",
+		Method: "GET",
 		Path:   "/inApps/v1/subscriptions/extend/mass/{productId}/{requestIdentifier}",
 		Result: result,
 		Headers: map[string]string{
