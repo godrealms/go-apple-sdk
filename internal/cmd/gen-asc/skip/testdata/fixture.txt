@@ -1,4 +1,5 @@
-# skip list fixture — exercises blanks, comments, whitespace
+# skip list fixture — exercises blanks, comments, whitespace,
+# resource-level skips and per-path skips.
 
 apps
 
@@ -8,3 +9,9 @@ builds
 
 # duplicate to verify set semantics
 apps
+
+# Per-path skips (resource has sub-paths we DO want generated).
+appStoreVersions /v1/appStoreVersions
+appStoreVersions /v1/appStoreVersions/{id}
+# Prefix glob: skip every path under /relationships/.
+appStoreVersions /v1/appStoreVersions/{id}/relationships/*

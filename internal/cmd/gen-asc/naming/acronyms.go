@@ -7,15 +7,26 @@ import (
 
 // acronyms lists tokens that must stay fully uppercase in Go
 // identifiers. They are matched at word boundaries: a "word" starts
-// at a PascalCase capital or the beginning of the string.
+// at a PascalCase capital or the beginning of the string. Matching
+// is case-insensitive by lowercasing both sides.
 //
-// Order matters: longer acronyms are matched first so "JSON" takes
-// precedence over "JS". Keep this list sorted from longest to
-// shortest.
+// Apple-specific terms (APNs, IAP, MFA, SKU, ASC) live alongside
+// the universal ones (JSON, JWT, API, URL, ID) so the generator
+// produces idiomatic Go names without a per-resource override.
+//
+// Order is irrelevant for exact-match lookups (rewriteTailAcronym
+// only returns on a full match) but kept longest-to-shortest for
+// readability.
 var acronyms = []string{
+	"APNS",
 	"JSON",
-	"JWT",
+	"APN",
 	"API",
+	"ASC",
+	"IAP",
+	"JWT",
+	"MFA",
+	"SKU",
 	"URL",
 	"ID",
 }

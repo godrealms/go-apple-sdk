@@ -56,9 +56,26 @@ func filterSkipped(rs []ir.Resource, set *skip.Set) []ir.Resource {
 	// a reference, which is a well-known footgun in code review.
 	out := make([]ir.Resource, 0, len(rs))
 	for _, r := range rs {
+		// Resource-level skip is the fast path: drops every op.
 		if set.Contains(r.APIName) {
 			continue
 		}
+		// Per-operation skip: keep only ops whose path template is
+		// not in the resource's path-pattern skip list.
+		keptOps := make([]ir.Operation, 0, len(r.Operations))
+		for _, op := range r.Operations {
+			if set.Skip(r.APIName, op.PathTemplate) {
+				continue
+			}
+			keptOps = append(keptOps, op)
+		}
+		// A resource with every op filtered out is effectively
+		// resource-level-skipped — drop it entirely so the IR
+		// doesn't surface an empty Resource{Operations: []}.
+		if len(keptOps) == 0 {
+			continue
+		}
+		r.Operations = keptOps
 		out = append(out, r)
 	}
 	return out

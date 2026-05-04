@@ -4,6 +4,15 @@
 # 新增手写 Service 时同步追加到这里；删除手写 Service 时从这里移除。
 # 条目粒度 = OpenAPI 资源名（lowerCamel），不是 Go 命名。
 # 一个手写 Service 可以占多行。
+#
+# 支持两种行格式（详见 skip.go 包文档）：
+#   resource                        — 跳整个资源（当前所有条目）
+#   resource path-pattern           — 跳该资源下匹配 path 的 op
+#
+# path-pattern 是确切 path（如 "/v1/apps/{id}"）或前缀（"/v1/apps/{id}/relationships/*"）。
+# 当 Phase 6.2 开始按 sub-path 决定生成哪些 ops 时，逐步把当前的 "resource" 行
+# 拆细成 path-pattern 形式（例：apps 资源的 86 个 op 中 3 个被 AppsService 覆盖，
+# 其它应该流到 generator 生成新 service）。本次只引入机制；分类工作归 Phase 6.2。
 
 # AppsService
 apps
