@@ -2,6 +2,7 @@ package Apple
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -44,6 +45,7 @@ type Client struct {
 
 // RequestParams contains all possible parameters for making a request
 type RequestParams struct {
+	Ctx         context.Context   // Optional request context (timeout / cancellation). nil → context.Background.
 	Method      string            // HTTP method (GET, POST, etc.)
 	Path        string            // Request path
 	Body        any               // Request body
@@ -247,6 +249,12 @@ func (client *Client) GenerateAppStoreConnectAuthorizationJWT(method string, end
 // Request is the main method for making HTTP requests
 func (client *Client) Request(params RequestParams, opts ...RequestOption) error {
 	req := client.httpclient.R()
+
+	// Attach context for timeout / cancellation propagation.
+	// Defaults to context.Background when callers leave Ctx nil.
+	if params.Ctx != nil {
+		req.SetContext(params.Ctx)
+	}
 
 	// Set request body and response result
 	if params.Body != nil {

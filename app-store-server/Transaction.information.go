@@ -1,6 +1,8 @@
 package AppStoreServer
 
 import (
+	"context"
+
 	Apple "github.com/godrealms/go-apple-sdk"
 	"github.com/godrealms/go-apple-sdk/types"
 )
@@ -10,10 +12,11 @@ type TransactionInfoResponse struct {
 	SignedTransactionInfo types.JWSTransaction `json:"signedTransactionInfo"`
 }
 
-func GetTransactionInfo(client *Apple.Client, transactionId string) (*TransactionInfoResponse, error) {
+func GetTransactionInfo(ctx context.Context, client *Apple.Client, transactionId string) (*TransactionInfoResponse, error) {
 	client.SetService(Apple.AppStoreServerClient)
 	var result = new(TransactionInfoResponse)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "GET",
 		Path:   "/inApps/v1/transactions/{transactionId}",
 		Result: result,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	Apple "github.com/godrealms/go-apple-sdk"
@@ -14,7 +15,7 @@ func main() {
 	privateKey := ""    // Your private key
 	transactionId := "" // Transaction ID
 	client := Apple.NewClient(true, kid, iss, bid, privateKey)
-	info, err := AppStoreServer.GetTransactionInfo(client, transactionId)
+	info, err := AppStoreServer.GetTransactionInfo(context.Background(), client, transactionId)
 	if err != nil {
 		log.Fatal(err)
 		return

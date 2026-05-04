@@ -1,6 +1,8 @@
 package AppStoreServer
 
 import (
+	"context"
+
 	Apple "github.com/godrealms/go-apple-sdk"
 	"github.com/godrealms/go-apple-sdk/types"
 )
@@ -110,9 +112,10 @@ type ConsumptionRequest struct {
 // is set. The previous code passed `Result: &result` where result
 // was a *string — which would silently corrupt any future error
 // responses Apple started returning.
-func SendConsumptionInformation(client *Apple.Client, transactionId string, body *ConsumptionRequest) error {
+func SendConsumptionInformation(ctx context.Context, client *Apple.Client, transactionId string, body *ConsumptionRequest) error {
 	client.SetService(Apple.AppStoreServerClient)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "PUT",
 		Path:   "/inApps/v1/transactions/consumption/{transactionId}",
 		Headers: map[string]string{

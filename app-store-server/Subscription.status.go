@@ -1,6 +1,8 @@
 package AppStoreServer
 
 import (
+	"context"
+
 	Apple "github.com/godrealms/go-apple-sdk"
 	"github.com/godrealms/go-apple-sdk/types"
 )
@@ -45,10 +47,11 @@ type StatusResponse struct {
 
 // GetAllSubscriptionStatuses
 // Get the statuses for all of a customer’s auto-renewable subscriptions in your app.
-func GetAllSubscriptionStatuses(client *Apple.Client, transactionId string) (*StatusResponse, error) {
+func GetAllSubscriptionStatuses(ctx context.Context, client *Apple.Client, transactionId string) (*StatusResponse, error) {
 	client.SetService(Apple.AppStoreServerClient)
 	var result = new(StatusResponse)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "GET",
 		Path:   "/inApps/v1/subscriptions/{transactionId}",
 		Result: result,

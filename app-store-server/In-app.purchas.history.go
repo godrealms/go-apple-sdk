@@ -1,6 +1,8 @@
 package AppStoreServer
 
 import (
+	"context"
+
 	Apple "github.com/godrealms/go-apple-sdk"
 	"github.com/godrealms/go-apple-sdk/types"
 )
@@ -22,10 +24,11 @@ type HistoryResponse struct {
 }
 
 // GetTransactionHistory Get a customer’s in-app purchase transaction history for your app.
-func GetTransactionHistory(client *Apple.Client, transactionId string, queryParams ...map[string]any) (*HistoryResponse, error) {
+func GetTransactionHistory(ctx context.Context, client *Apple.Client, transactionId string, queryParams ...map[string]any) (*HistoryResponse, error) {
 	var result = new(HistoryResponse)
 	client.SetService(Apple.AppStoreServerClient)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "GET",
 		Path:   "/inApps/v2/history/{transactionId}",
 		Result: result,

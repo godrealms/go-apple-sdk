@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	Apple "github.com/godrealms/go-apple-sdk"
@@ -14,7 +15,7 @@ func main() {
 	privateKey := "" // Your private key
 	orderId := ""    // order ID
 	client := Apple.NewClient(true, kid, iss, bid, privateKey)
-	response, err := AppStoreServer.LookUpOrderID(client, orderId)
+	response, err := AppStoreServer.LookUpOrderID(context.Background(), client, orderId)
 	if err != nil {
 		log.Fatalln(err)
 		return

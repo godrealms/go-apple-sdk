@@ -1,6 +1,8 @@
 package AppStoreServer
 
 import (
+	"context"
+
 	Apple "github.com/godrealms/go-apple-sdk"
 	"github.com/godrealms/go-apple-sdk/types"
 )
@@ -13,10 +15,11 @@ type OrderLookupResponse struct {
 }
 
 // LookUpOrderID Get a customer’s in-app purchases from a receipt using the order ID.
-func LookUpOrderID(client *Apple.Client, orderId string) (*OrderLookupResponse, error) {
+func LookUpOrderID(ctx context.Context, client *Apple.Client, orderId string) (*OrderLookupResponse, error) {
 	client.SetService(Apple.AppStoreServerClient)
 	var result = new(OrderLookupResponse)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "GET",
 		Path:   "/inApps/v1/lookup/{orderId}",
 		Result: result,

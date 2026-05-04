@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	Apple "github.com/godrealms/go-apple-sdk"
@@ -14,7 +15,7 @@ func main() {
 	privateKey := ""    // Your private key
 	transactionId := "" // Transaction ID
 	client := Apple.NewClient(true, kid, iss, bid, privateKey)
-	err := AppStoreServer.SendConsumptionInformation(client, transactionId, &AppStoreServer.ConsumptionRequest{
+	err := AppStoreServer.SendConsumptionInformation(context.Background(), client, transactionId, &AppStoreServer.ConsumptionRequest{
 		// (Required) The age of the customer's account.
 		// 0: Account age is undeclared. Use this value to avoid providing information for this field.
 		// 1: Account age is between 0-3 days.

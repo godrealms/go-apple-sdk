@@ -1,6 +1,8 @@
 package AppStoreServer
 
 import (
+	"context"
+
 	Apple "github.com/godrealms/go-apple-sdk"
 	"github.com/godrealms/go-apple-sdk/types"
 )
@@ -80,10 +82,11 @@ type MassExtendRenewalDateStatusResponse struct {
 }
 
 // ExtendSubscriptionRenewalDate Extends the renewal date of a customer’s active subscription using the original transaction identifier.
-func ExtendSubscriptionRenewalDate(client *Apple.Client, originalTransactionId string, body *ExtendRenewalDateRequest) (*ExtendRenewalDateResponse, error) {
+func ExtendSubscriptionRenewalDate(ctx context.Context, client *Apple.Client, originalTransactionId string, body *ExtendRenewalDateRequest) (*ExtendRenewalDateResponse, error) {
 	client.SetService(Apple.AppStoreServerClient)
 	var result = new(ExtendRenewalDateResponse)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "PUT",
 		Path:   "/inApps/v1/subscriptions/extend/{originalTransactionId}",
 		Result: result,
@@ -102,10 +105,11 @@ func ExtendSubscriptionRenewalDate(client *Apple.Client, originalTransactionId s
 }
 
 // ExtendSubscriptionRenewalDatesForAllActiveSubscribers Uses a subscription’s product identifier to extend the renewal date for all of its eligible active subscribers.
-func ExtendSubscriptionRenewalDatesForAllActiveSubscribers(client *Apple.Client, body *MassExtendRenewalDateRequest) (*MassExtendRenewalDateResponse, error) {
+func ExtendSubscriptionRenewalDatesForAllActiveSubscribers(ctx context.Context, client *Apple.Client, body *MassExtendRenewalDateRequest) (*MassExtendRenewalDateResponse, error) {
 	client.SetService(Apple.AppStoreServerClient)
 	var result = new(MassExtendRenewalDateResponse)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "POST",
 		Path:   "/inApps/v1/subscriptions/extend/mass/",
 		Result: result,
@@ -125,10 +129,11 @@ func ExtendSubscriptionRenewalDatesForAllActiveSubscribers(client *Apple.Client,
 // Per Apple's documentation this endpoint is GET, not PUT — the
 // previous PUT was a transcription error and would have produced
 // a 405 Method Not Allowed from Apple if anyone had ever called it.
-func GetStatusOfSubscriptionRenewalDateExtensions(client *Apple.Client, productId string, requestIdentifier string) (*MassExtendRenewalDateStatusResponse, error) {
+func GetStatusOfSubscriptionRenewalDateExtensions(ctx context.Context, client *Apple.Client, productId string, requestIdentifier string) (*MassExtendRenewalDateStatusResponse, error) {
 	client.SetService(Apple.AppStoreServerClient)
 	var result = new(MassExtendRenewalDateStatusResponse)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "GET",
 		Path:   "/inApps/v1/subscriptions/extend/mass/{productId}/{requestIdentifier}",
 		Result: result,

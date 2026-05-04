@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	Apple "github.com/godrealms/go-apple-sdk"
@@ -8,19 +9,20 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	kid := ""        // Your private key ID from App Store Connect (Ex: 2X9R4HXF34)
 	iss := ""        // Your issuer ID from the Keys page in App Store Connect (Ex: "57246542-96fe-1a63-e053-0824d011072a")
 	bid := ""        // Your app's bundle ID (Ex: "com.example.testbundleid")
 	privateKey := "" // Your private key
 	client := Apple.NewClient(true, kid, iss, bid, privateKey)
-	response, err := AppStoreServer.RequestTestNotification(client)
+	response, err := AppStoreServer.RequestTestNotification(ctx, client)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 	log.Println("TestNotificationToken: ", response.TestNotificationToken)
 
-	testNotification, err := AppStoreServer.GetTestNotificationStatus(client, response.TestNotificationToken)
+	testNotification, err := AppStoreServer.GetTestNotificationStatus(ctx, client, response.TestNotificationToken)
 	if err != nil {
 		log.Fatal(err)
 		return

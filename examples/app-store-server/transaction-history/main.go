@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	Apple "github.com/godrealms/go-apple-sdk"
@@ -14,7 +15,7 @@ func main() {
 	privateKey := ""    // Your private key
 	transactionId := "" // Transaction ID
 	client := Apple.NewClient(true, kid, iss, bid, privateKey)
-	history, err := AppStoreServer.GetTransactionHistory(client, transactionId, map[string]any{
+	history, err := AppStoreServer.GetTransactionHistory(context.Background(), client, transactionId, map[string]any{
 		// A token you provide to get the next set of up to 20 transactions.
 		// All responses include a revision token.
 		// Use the revision token from the previous HistoryResponse.

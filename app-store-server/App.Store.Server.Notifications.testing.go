@@ -1,6 +1,8 @@
 package AppStoreServer
 
 import (
+	"context"
+
 	Apple "github.com/godrealms/go-apple-sdk"
 	"github.com/godrealms/go-apple-sdk/types"
 )
@@ -26,10 +28,11 @@ type CheckTestNotificationResponse struct {
 }
 
 // RequestTestNotification Ask App Store AppStoreServerAPI Notifications to send a test notification to your server.
-func RequestTestNotification(client *Apple.Client) (*SendTestNotificationResponse, error) {
+func RequestTestNotification(ctx context.Context, client *Apple.Client) (*SendTestNotificationResponse, error) {
 	var result = new(SendTestNotificationResponse)
 	client.SetService(Apple.AppStoreServerClient)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "POST",
 		Path:   "/inApps/v1/notifications/test",
 		Result: result,
@@ -45,10 +48,11 @@ func RequestTestNotification(client *Apple.Client) (*SendTestNotificationRespons
 }
 
 // GetTestNotificationStatus Check the status of the test App Store server notification sent to your server.
-func GetTestNotificationStatus(client *Apple.Client, testNotificationToken string) (*CheckTestNotificationResponse, error) {
+func GetTestNotificationStatus(ctx context.Context, client *Apple.Client, testNotificationToken string) (*CheckTestNotificationResponse, error) {
 	var result = new(CheckTestNotificationResponse)
 	client.SetService(Apple.AppStoreServerClient)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "GET",
 		Path:   "/inApps/v1/notifications/test/{testNotificationToken}",
 		Result: result,

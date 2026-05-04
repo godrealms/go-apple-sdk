@@ -1,6 +1,8 @@
 package AppStoreServer
 
 import (
+	"context"
+
 	Apple "github.com/godrealms/go-apple-sdk"
 	"github.com/godrealms/go-apple-sdk/types"
 )
@@ -21,10 +23,11 @@ type RefundHistoryResponse struct {
 }
 
 // GetRefundHistory Get a paginated list of all of a customer’s refunded in-app purchases for your app.
-func GetRefundHistory(client *Apple.Client, transactionId string) (*RefundHistoryResponse, error) {
+func GetRefundHistory(ctx context.Context, client *Apple.Client, transactionId string) (*RefundHistoryResponse, error) {
 	client.SetService(Apple.AppStoreServerClient)
 	var result = new(RefundHistoryResponse)
 	params := Apple.RequestParams{
+		Ctx:    ctx,
 		Method: "GET",
 		Path:   "/inApps/v2/refund/lookup/{transactionId}",
 		Result: result,
