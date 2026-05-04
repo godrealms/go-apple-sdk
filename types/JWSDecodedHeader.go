@@ -1,39 +1,19 @@
 package types
 
-import (
-	"crypto/x509"
-	"encoding/base64"
-	"fmt"
-)
+import "github.com/godrealms/go-apple-sdk/jws"
 
-// The JSON Web Signature (JWS) header parameter that identifies the cryptographic algorithm used to secure the JWS.
-type alg string
+// X5c is the JWS x5c header field, aliased from the jws package.
+//
+// The previous types.X5c.GetPublicKey() method has been removed.
+// It returned only the leaf cert without validating the chain,
+// which made every consumer trivially impersonable. Migrate to
+// jws.Verifier (or the new Decrypt / DecodedPayload methods on
+// JWSTransaction / JWSRenewalInfo / SignedPayload, which all use
+// jws.DefaultVerifier internally).
+type X5c = jws.X5c
 
-// The JSON Web Signature (JWS) header parameter that contains the certificate chain that corresponds to the key used to digitally sign the JWS.
-type x5c []string
-
-func (c x5c) GetPublicKey() (*x509.Certificate, error) {
-	if len(c) == 0 {
-		return nil, fmt.Errorf("no certificates found in x5c")
-	}
-	// Decode the first certificate in the chain
-	certBytes, err := base64.StdEncoding.DecodeString(c[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode certificate: %w", err)
-	}
-
-	// Parse the certificate
-	cert, err := x509.ParseCertificate(certBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse certificate: %w", err)
-	}
-
-	return cert, nil
-}
-
-type JWSDecodedHeader struct {
-	// The algorithm used for signing the JSON Web Signature (JWS).
-	Alg alg `json:"alg"`
-	// The X.509 certificate chain that corresponds to the key that the App Store used to secure the JWS.
-	X5c x5c `json:"x5c"`
-}
+// JWSDecodedHeader is the JWS protected header, aliased from the
+// jws package. The header's Alg field is a plain string (jws.Alg
+// is `type Alg = string`); the standalone types.Alg type with a
+// String() method lives in types/alg.go and is independent.
+type JWSDecodedHeader = jws.Header
