@@ -13,7 +13,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	Apple "github.com/godrealms/go-apple-sdk"
+	Apple "github.com/godrealms/go-apple-sdk/v2"
 )
 
 func testKeyPEM(t *testing.T) string {

@@ -1,10 +1,16 @@
 # Changelog
 
-> **版本说明**：`v1.0.0` 已发布。当前 `Unreleased` 段累积了多项破坏性变更（见下方
-> **Breaking** 与更早的 `context.Context` 迁移），按 SemVer **下一个发布应为 `v2.0.0`**，
-> 并将模块路径改为 `github.com/godrealms/go-apple-sdk/v2`。在切出 v2 之前不应再打 `v1.x` tag。
+本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。自 `v2.0.0` 起模块路径为
+`github.com/godrealms/go-apple-sdk/v2`，import 需相应更新。
 
-## Unreleased
+## v2.0.0 - 2026-07-08
+
+> **破坏性发布**：模块路径迁移到 `github.com/godrealms/go-apple-sdk/v2`。升级请将所有
+> import 从 `github.com/godrealms/go-apple-sdk/...` 改为
+> `github.com/godrealms/go-apple-sdk/v2/...`，并执行
+> `go get github.com/godrealms/go-apple-sdk/v2@v2.0.0`。本版本一次性合并自 `v1.0.0`
+> 以来累积的全部破坏性变更（JWS 完整证书链校验、`context.Context` 迁移、
+> `GetNotificationHistory` 签名变更等，详见下方）。
 
 ### 代码审查修复批次（2026-07）
 
@@ -53,7 +59,7 @@
 
 ### Added
 
-- 新增顶层包 `github.com/godrealms/go-apple-sdk/jws`：
+- 新增顶层包 `github.com/godrealms/go-apple-sdk/v2/jws`：
   - `*Verifier` + `NewVerifier(opts ...Option)`（`WithRootCAs` / `WithRequiredOIDs` / `WithClock`）
   - `VerifyAndDecode[T any](v *Verifier, raw string) (*T, error)` 泛型入口
   - `DefaultVerifier()` 进程级单例（`sync.Once`），内嵌 Apple Root CA G3

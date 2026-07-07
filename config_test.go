@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/godrealms/go-apple-sdk/types"
+	"github.com/godrealms/go-apple-sdk/v2/types"
 )
 
 func genConfigKey(t *testing.T) *ecdsa.PrivateKey {

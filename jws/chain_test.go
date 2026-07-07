@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godrealms/go-apple-sdk/internal/testchain"
+	"github.com/godrealms/go-apple-sdk/v2/internal/testchain"
 )
 
 // verifyChain tests

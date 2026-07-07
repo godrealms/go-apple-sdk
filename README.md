@@ -1,7 +1,7 @@
 # Go Apple SDK
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/godrealms/go-apple-sdk.svg)](https://pkg.go.dev/github.com/godrealms/go-apple-sdk)
-[![Go Report Card](https://goreportcard.com/badge/github.com/godrealms/go-apple-sdk)](https://goreportcard.com/report/github.com/godrealms/go-apple-sdk)
+[![Go Reference](https://pkg.go.dev/badge/github.com/godrealms/go-apple-sdk/v2.svg)](https://pkg.go.dev/github.com/godrealms/go-apple-sdk/v2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/godrealms/go-apple-sdk/v2)](https://goreportcard.com/report/github.com/godrealms/go-apple-sdk/v2)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Go Apple SDK 是一个覆盖 Apple 开发者生态两套核心 API 的 Go SDK，帮助后端服务和 CI/CD 流水线自动化应用内购买校验、订阅生命周期管理、TestFlight 发布、App Store 提审与商品配置等任务。
@@ -26,10 +26,10 @@ Go Apple SDK 是一个覆盖 Apple 开发者生态两套核心 API 的 Go SDK，
 ## 安装
 
 ```bash
-go get github.com/godrealms/go-apple-sdk
+go get github.com/godrealms/go-apple-sdk/v2
 ```
 
-需要 Go 1.23 及以上（使用了泛型和新版 `slices` 行为）。
+需要 Go 1.25 及以上（`go.mod` 声明 `go 1.25.0`；使用了泛型和新版 `slices` 行为）。
 
 ## 目录
 
@@ -60,7 +60,7 @@ go get github.com/godrealms/go-apple-sdk
 
 ```go
 import (
-    Apple "github.com/godrealms/go-apple-sdk"
+    Apple "github.com/godrealms/go-apple-sdk/v2"
 )
 
 client := Apple.NewClient(
@@ -80,7 +80,7 @@ client := Apple.NewClient(
 import (
     "context"
 
-    AppStoreServer "github.com/godrealms/go-apple-sdk/app-store-server"
+    AppStoreServer "github.com/godrealms/go-apple-sdk/v2/app-store-server"
 )
 
 // 所有 App Store Server API 函数的第一个参数都是 context.Context。
@@ -189,8 +189,8 @@ App Store Connect API 本身遵循 [JSON:API 规范](https://jsonapi.org/)，所
 
 ```go
 import (
-    Apple "github.com/godrealms/go-apple-sdk"
-    AppStoreConnect "github.com/godrealms/go-apple-sdk/app-store-connect"
+    Apple "github.com/godrealms/go-apple-sdk/v2"
+    AppStoreConnect "github.com/godrealms/go-apple-sdk/v2/app-store-connect"
 )
 
 client := Apple.NewClient(false, keyID, issuerID, bundleID, privateKeyPEM)
@@ -243,8 +243,8 @@ if errors.As(err, &clientErr) {
 import (
     "errors"
 
-    "github.com/godrealms/go-apple-sdk/jws"
-    AppStoreNotifications "github.com/godrealms/go-apple-sdk/app-store-server-notifications"
+    "github.com/godrealms/go-apple-sdk/v2/jws"
+    AppStoreNotifications "github.com/godrealms/go-apple-sdk/v2/app-store-server-notifications"
 )
 
 payload, err := AppStoreNotifications.SignedPayload(raw).DecodedPayload()
@@ -469,7 +469,7 @@ if err != nil {
 
 ## API 文档
 
-完整的类型和方法文档请参考 [pkg.go.dev/github.com/godrealms/go-apple-sdk](https://pkg.go.dev/github.com/godrealms/go-apple-sdk)。
+完整的类型和方法文档请参考 [pkg.go.dev/github.com/godrealms/go-apple-sdk/v2](https://pkg.go.dev/github.com/godrealms/go-apple-sdk/v2)。
 
 ## 贡献
 

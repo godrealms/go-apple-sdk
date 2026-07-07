@@ -1,6 +1,6 @@
 package types
 
-import "github.com/godrealms/go-apple-sdk/jws"
+import "github.com/godrealms/go-apple-sdk/v2/jws"
 
 // The three-letter ISO 4217 currency code for the price of the product.
 type currency string

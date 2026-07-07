@@ -1,6 +1,6 @@
 package types
 
-import "github.com/godrealms/go-apple-sdk/jws"
+import "github.com/godrealms/go-apple-sdk/v2/jws"
 
 // X5c is the JWS x5c header field, aliased from the jws package.
 //

@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	Apple "github.com/godrealms/go-apple-sdk"
-	AppStoreServer "github.com/godrealms/go-apple-sdk/app-store-server"
+	Apple "github.com/godrealms/go-apple-sdk/v2"
+	AppStoreServer "github.com/godrealms/go-apple-sdk/v2/app-store-server"
 )
 
 func main() {

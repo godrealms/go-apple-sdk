@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/godrealms/go-apple-sdk/internal/testchain"
+	"github.com/godrealms/go-apple-sdk/v2/internal/testchain"
 )
 
 func TestX5c_Parse_Success(t *testing.T) {

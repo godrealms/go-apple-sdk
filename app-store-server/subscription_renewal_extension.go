@@ -3,8 +3,8 @@ package AppStoreServer
 import (
 	"context"
 
-	Apple "github.com/godrealms/go-apple-sdk"
-	"github.com/godrealms/go-apple-sdk/types"
+	Apple "github.com/godrealms/go-apple-sdk/v2"
+	"github.com/godrealms/go-apple-sdk/v2/types"
 )
 
 // ExtendRenewalDateRequest The request body that contains subscription-renewal-extension data for an individual subscription.

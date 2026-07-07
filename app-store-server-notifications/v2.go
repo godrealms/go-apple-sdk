@@ -1,8 +1,8 @@
 package AppStoreNotifications
 
 import (
-	"github.com/godrealms/go-apple-sdk/jws"
-	"github.com/godrealms/go-apple-sdk/types"
+	"github.com/godrealms/go-apple-sdk/v2/jws"
+	"github.com/godrealms/go-apple-sdk/v2/types"
 )
 
 // App Store Server Notifications

@@ -1,6 +1,6 @@
 package types
 
-import "github.com/godrealms/go-apple-sdk/jws"
+import "github.com/godrealms/go-apple-sdk/v2/jws"
 
 // The identifier of the product that renews at the next billing period.
 type autoRenewProductId string

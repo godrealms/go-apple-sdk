@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/godrealms/go-apple-sdk/internal/testchain"
-	"github.com/godrealms/go-apple-sdk/jws"
+	"github.com/godrealms/go-apple-sdk/v2/internal/testchain"
+	"github.com/godrealms/go-apple-sdk/v2/jws"
 )
 
 func TestJWSTransaction_Decrypt_DefaultVerifierRejectsTestChain(t *testing.T) {

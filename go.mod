@@ -1,4 +1,4 @@
-module github.com/godrealms/go-apple-sdk
+module github.com/godrealms/go-apple-sdk/v2
 
 go 1.25.0
 

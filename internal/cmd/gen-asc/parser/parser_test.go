@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/ir"
-	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/skip"
+	"github.com/godrealms/go-apple-sdk/v2/internal/cmd/gen-asc/ir"
+	"github.com/godrealms/go-apple-sdk/v2/internal/cmd/gen-asc/skip"
 )
 
 func TestParse_MinimalFixture(t *testing.T) {

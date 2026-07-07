@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	AppStoreConnect "github.com/godrealms/go-apple-sdk/app-store-connect"
-	"github.com/godrealms/go-apple-sdk/types"
+	AppStoreConnect "github.com/godrealms/go-apple-sdk/v2/app-store-connect"
+	"github.com/godrealms/go-apple-sdk/v2/types"
 	"github.com/golang-jwt/jwt/v5"
 )
 

@@ -11,8 +11,8 @@ import (
 	"os"
 	"time"
 
-	Apple "github.com/godrealms/go-apple-sdk"
-	AppStoreConnect "github.com/godrealms/go-apple-sdk/app-store-connect"
+	Apple "github.com/godrealms/go-apple-sdk/v2"
+	AppStoreConnect "github.com/godrealms/go-apple-sdk/v2/app-store-connect"
 )
 
 func main() {

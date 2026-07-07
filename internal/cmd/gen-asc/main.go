@@ -2,7 +2,7 @@
 // Apple's vendored OpenAPI specification.
 //
 // This binary is internal tooling, not part of the public SDK surface:
-// users of github.com/godrealms/go-apple-sdk never need to run it. It
+// users of github.com/godrealms/go-apple-sdk/v2 never need to run it. It
 // is invoked by maintainers via `go run ./internal/cmd/gen-asc` or the
 // eventual `make gen` target.
 //
@@ -23,10 +23,10 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/ir"
-	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/parser"
-	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/skip"
-	"github.com/godrealms/go-apple-sdk/internal/cmd/gen-asc/spec"
+	"github.com/godrealms/go-apple-sdk/v2/internal/cmd/gen-asc/ir"
+	"github.com/godrealms/go-apple-sdk/v2/internal/cmd/gen-asc/parser"
+	"github.com/godrealms/go-apple-sdk/v2/internal/cmd/gen-asc/skip"
+	"github.com/godrealms/go-apple-sdk/v2/internal/cmd/gen-asc/spec"
 )
 
 func main() {

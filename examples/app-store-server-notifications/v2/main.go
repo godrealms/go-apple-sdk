@@ -4,8 +4,8 @@ import (
 	"errors"
 	"log"
 
-	AppStoreNotifications "github.com/godrealms/go-apple-sdk/app-store-server-notifications"
-	"github.com/godrealms/go-apple-sdk/jws"
+	AppStoreNotifications "github.com/godrealms/go-apple-sdk/v2/app-store-server-notifications"
+	"github.com/godrealms/go-apple-sdk/v2/jws"
 )
 
 func main() {
