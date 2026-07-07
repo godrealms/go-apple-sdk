@@ -97,8 +97,8 @@ func TestSkip_PrefixGlob(t *testing.T) {
 	// "appStoreVersions /v1/appStoreVersions/{id}/relationships/*"
 	prefix := "/v1/appStoreVersions/{id}/relationships"
 	for _, path := range []string{
-		prefix,                // pattern itself
-		prefix + "/build",     // direct child
+		prefix,            // pattern itself
+		prefix + "/build", // direct child
 		prefix + "/appStoreVersionLocalizations",
 	} {
 		if !set.Skip("appStoreVersions", path) {

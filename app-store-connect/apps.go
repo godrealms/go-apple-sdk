@@ -19,18 +19,18 @@ type App = Resource[AppAttributes]
 //
 // Reference: https://developer.apple.com/documentation/appstoreconnectapi/app/attributes
 type AppAttributes struct {
-	Name                          string     `json:"name,omitempty"`
-	BundleId                      string     `json:"bundleId,omitempty"`
-	Sku                           string     `json:"sku,omitempty"`
-	PrimaryLocale                 string     `json:"primaryLocale,omitempty"`
-	IsOrEverWasMadeForKids        bool       `json:"isOrEverWasMadeForKids,omitempty"`
-	SubscriptionStatusUrl         string     `json:"subscriptionStatusUrl,omitempty"`
-	SubscriptionStatusUrlVersion  string     `json:"subscriptionStatusUrlVersion,omitempty"`
-	SubscriptionStatusUrlForSandbox        string `json:"subscriptionStatusUrlForSandbox,omitempty"`
-	SubscriptionStatusUrlVersionForSandbox string `json:"subscriptionStatusUrlVersionForSandbox,omitempty"`
-	ContentRightsDeclaration      string     `json:"contentRightsDeclaration,omitempty"`
-	AvailableInNewTerritories     *bool      `json:"availableInNewTerritories,omitempty"`
-	CreatedDate                   *time.Time `json:"createdDate,omitempty"`
+	Name                                   string     `json:"name,omitempty"`
+	BundleId                               string     `json:"bundleId,omitempty"`
+	Sku                                    string     `json:"sku,omitempty"`
+	PrimaryLocale                          string     `json:"primaryLocale,omitempty"`
+	IsOrEverWasMadeForKids                 bool       `json:"isOrEverWasMadeForKids,omitempty"`
+	SubscriptionStatusUrl                  string     `json:"subscriptionStatusUrl,omitempty"`
+	SubscriptionStatusUrlVersion           string     `json:"subscriptionStatusUrlVersion,omitempty"`
+	SubscriptionStatusUrlForSandbox        string     `json:"subscriptionStatusUrlForSandbox,omitempty"`
+	SubscriptionStatusUrlVersionForSandbox string     `json:"subscriptionStatusUrlVersionForSandbox,omitempty"`
+	ContentRightsDeclaration               string     `json:"contentRightsDeclaration,omitempty"`
+	AvailableInNewTerritories              *bool      `json:"availableInNewTerritories,omitempty"`
+	CreatedDate                            *time.Time `json:"createdDate,omitempty"`
 }
 
 // ListAppsResponse is the decoded response for [AppsService.List].
@@ -50,7 +50,7 @@ type ListAppsResponse struct {
 // See https://developer.apple.com/documentation/appstoreconnectapi/list_apps
 func (s *AppsService) List(ctx context.Context, query *Query) (*ListAppsResponse, error) {
 	var doc Document[AppAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/apps", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/apps", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -84,7 +84,7 @@ func (s *AppsService) Get(ctx context.Context, id string, query *Query) (*App, e
 		return nil, &ClientError{Message: "Apps.Get: id is required"}
 	}
 	var doc Document[AppAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/apps/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/apps/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -190,7 +190,7 @@ func (s *AppsService) Update(ctx context.Context, id string, update *AppUpdate) 
 		},
 	}
 	var doc Document[AppAttributes]
-	if _, err := s.svc.do(ctx, "PATCH", "/v1/apps/"+id, nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "PATCH", "/v1/apps/"+id, nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()

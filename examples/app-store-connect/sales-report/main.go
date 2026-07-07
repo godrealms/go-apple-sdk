@@ -16,10 +16,10 @@ import (
 )
 
 func main() {
-	kid := ""           // Your private key ID
-	iss := ""           // Your issuer ID
-	bid := ""           // Your app's primary bundle ID
-	privateKey := ""    // Your ES256 private key (PKCS#8)
+	kid := ""          // Your private key ID
+	iss := ""          // Your issuer ID
+	bid := ""          // Your app's primary bundle ID
+	privateKey := ""   // Your ES256 private key (PKCS#8)
 	vendorNumber := "" // Your vendor number (see Payments and Financial Reports)
 	reportDate := "2025-03-01"
 

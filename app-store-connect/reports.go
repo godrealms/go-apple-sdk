@@ -73,7 +73,7 @@ func (s *ReportsService) DownloadSalesReport(ctx context.Context, req SalesRepor
 	if req.Version != "" {
 		q = q.Filter("version", req.Version)
 	}
-	_, body, err := s.svc.doRaw(ctx, "GET", "/v1/salesReports", q)
+	body, err := s.svc.doRaw(ctx, "GET", "/v1/salesReports", q)
 	if err != nil {
 		return nil, fmt.Errorf("download sales report: %w", err)
 	}
@@ -98,7 +98,7 @@ func (s *ReportsService) DownloadFinanceReport(ctx context.Context, req FinanceR
 	if req.ReportType != "" {
 		q = q.Filter("reportType", req.ReportType)
 	}
-	_, body, err := s.svc.doRaw(ctx, "GET", "/v1/financeReports", q)
+	body, err := s.svc.doRaw(ctx, "GET", "/v1/financeReports", q)
 	if err != nil {
 		return nil, fmt.Errorf("download finance report: %w", err)
 	}

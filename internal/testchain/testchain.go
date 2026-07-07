@@ -30,7 +30,7 @@ type Chain struct {
 	RootPool                 *x509.CertPool
 }
 
-// Opt customises the leaf cert built by New.
+// Opt customizes the leaf cert built by New.
 type Opt func(*config)
 
 type config struct {
@@ -148,7 +148,7 @@ func New(t *testing.T, opts ...Opt) *Chain {
 }
 
 // SignJWS builds a JWS string (header.payload.signature) using the
-// leaf key. payload is JSON-marshalled; header carries alg=ES256
+// leaf key. payload is JSON-marshaled; header carries alg=ES256
 // and x5c=[leaf, intermediate, root] (each base64-std-encoded
 // DER).
 func (c *Chain) SignJWS(t *testing.T, payload any) string {

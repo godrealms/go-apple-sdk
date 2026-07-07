@@ -42,7 +42,7 @@ func (s *SubscriptionGroupsService) ListForApp(ctx context.Context, appID string
 	}
 	var doc Document[SubscriptionGroupAttributes]
 	path := "/v1/apps/" + appID + "/subscriptionGroups"
-	if _, err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -64,7 +64,7 @@ func (s *SubscriptionGroupsService) Get(ctx context.Context, id string, query *Q
 		return nil, &ClientError{Message: "SubscriptionGroups.Get: id is required"}
 	}
 	var doc Document[SubscriptionGroupAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/subscriptionGroups/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/subscriptionGroups/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -99,7 +99,7 @@ func (s *SubscriptionGroupsService) Create(ctx context.Context, req CreateSubscr
 		},
 	}
 	var doc Document[SubscriptionGroupAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/subscriptionGroups", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/subscriptionGroups", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -123,7 +123,7 @@ func (s *SubscriptionGroupsService) Update(ctx context.Context, id, referenceNam
 		},
 	}
 	var doc Document[SubscriptionGroupAttributes]
-	if _, err := s.svc.do(ctx, "PATCH", "/v1/subscriptionGroups/"+id, nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "PATCH", "/v1/subscriptionGroups/"+id, nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -135,6 +135,6 @@ func (s *SubscriptionGroupsService) Delete(ctx context.Context, id string) error
 	if id == "" {
 		return &ClientError{Message: "SubscriptionGroups.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/subscriptionGroups/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/subscriptionGroups/"+id, nil, nil, nil)
 	return err
 }

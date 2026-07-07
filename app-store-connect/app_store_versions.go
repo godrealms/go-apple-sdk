@@ -54,7 +54,7 @@ func (s *AppStoreVersionsService) ListForApp(ctx context.Context, appID string, 
 	}
 	var doc Document[AppStoreVersionAttributes]
 	path := "/v1/apps/" + appID + "/appStoreVersions"
-	if _, err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -76,7 +76,7 @@ func (s *AppStoreVersionsService) Get(ctx context.Context, id string, query *Que
 		return nil, &ClientError{Message: "AppStoreVersions.Get: id is required"}
 	}
 	var doc Document[AppStoreVersionAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/appStoreVersions/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/appStoreVersions/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -122,7 +122,7 @@ func (s *AppStoreVersionsService) Create(ctx context.Context, req CreateAppStore
 		},
 	}
 	var doc Document[AppStoreVersionAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/appStoreVersions", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/appStoreVersions", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -195,7 +195,7 @@ func (s *AppStoreVersionsService) Update(ctx context.Context, id string, update 
 		},
 	}
 	var doc Document[AppStoreVersionAttributes]
-	if _, err := s.svc.do(ctx, "PATCH", "/v1/appStoreVersions/"+id, nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "PATCH", "/v1/appStoreVersions/"+id, nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -206,7 +206,7 @@ func (s *AppStoreVersionsService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "AppStoreVersions.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/appStoreVersions/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/appStoreVersions/"+id, nil, nil, nil)
 	return err
 }
 
@@ -220,6 +220,6 @@ func (s *AppStoreVersionsService) SelectBuild(ctx context.Context, versionID, bu
 	body := map[string]any{
 		"data": map[string]any{"type": "builds", "id": buildID},
 	}
-	_, err := s.svc.do(ctx, "PATCH", "/v1/appStoreVersions/"+versionID+"/relationships/build", nil, body, nil)
+	err := s.svc.do(ctx, "PATCH", "/v1/appStoreVersions/"+versionID+"/relationships/build", nil, body, nil)
 	return err
 }

@@ -40,7 +40,7 @@ type ListProfilesResponse struct {
 // List returns a page of profiles matching the query.
 func (s *ProfilesService) List(ctx context.Context, query *Query) (*ListProfilesResponse, error) {
 	var doc Document[ProfileAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/profiles", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/profiles", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -61,7 +61,7 @@ func (s *ProfilesService) Get(ctx context.Context, id string, query *Query) (*Pr
 		return nil, &ClientError{Message: "Profiles.Get: id is required"}
 	}
 	var doc Document[ProfileAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/profiles/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/profiles/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -112,7 +112,7 @@ func (s *ProfilesService) Create(ctx context.Context, req CreateProfileRequest) 
 		},
 	}
 	var doc Document[ProfileAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/profiles", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/profiles", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -123,6 +123,6 @@ func (s *ProfilesService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "Profiles.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/profiles/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/profiles/"+id, nil, nil, nil)
 	return err
 }

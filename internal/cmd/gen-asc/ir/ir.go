@@ -25,9 +25,9 @@ type Metadata struct {
 // share a resource path prefix, plus the attribute/relationship
 // schema used to decode or encode its documents.
 type Resource struct {
-	Name       string         `json:"name"`       // Go: "AnalyticsReports"
-	APIName    string         `json:"api_name"`   // OpenAPI: "analyticsReports"
-	DocURL     string         `json:"doc_url,omitempty"`
+	Name    string `json:"name"`     // Go: "AnalyticsReports"
+	APIName string `json:"api_name"` // OpenAPI: "analyticsReports"
+	DocURL  string `json:"doc_url,omitempty"`
 	// Operations enumerates every HTTP endpoint on this resource.
 	// A Resource with no operations is a parser bug; we deliberately
 	// omit the omitempty tag so dump-ir surfaces it as "null" instead
@@ -39,7 +39,7 @@ type Resource struct {
 
 // Operation is one HTTP endpoint on a resource.
 type Operation struct {
-	Name         string  `json:"name"`       // Go method name, e.g. "List"
+	Name         string  `json:"name"` // Go method name, e.g. "List"
 	HTTPMethod   string  `json:"http_method"`
 	PathTemplate string  `json:"path_template"`
 	PathParams   []Field `json:"path_params,omitempty"`
@@ -72,7 +72,7 @@ type Type struct {
 
 // Relationship is a JSON:API relationship entry on a Resource.
 type Relationship struct {
-	Name   string `json:"name"`       // Go: "App"
-	Target string `json:"target"`     // OpenAPI resource name of the target
+	Name   string `json:"name"`   // Go: "App"
+	Target string `json:"target"` // OpenAPI resource name of the target
 	ToMany bool   `json:"to_many,omitempty"`
 }

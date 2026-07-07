@@ -1,7 +1,6 @@
 package Apple
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -19,14 +18,15 @@ type Config struct {
 }
 
 func NewConfig(kid, iss, bid, privateKey string) *Config {
-	if !strings.HasPrefix(strings.TrimSpace(privateKey), "-----BEGIN PRIVATE KEY-----") {
-		privateKey = fmt.Sprintf(`-----BEGIN PRIVATE KEY-----
-%s`, strings.TrimSpace(privateKey))
+	key := strings.TrimSpace(privateKey)
+	// Only synthesize a PKCS#8 PEM wrapper when the caller passed a bare
+	// base64 body. If the input already carries a PEM header — PKCS#8
+	// ("PRIVATE KEY") or SEC1 ("EC PRIVATE KEY") — leave it intact instead of
+	// wrapping it again, which would produce a malformed, double-headed block.
+	if !strings.Contains(key, "-----BEGIN") {
+		key = "-----BEGIN PRIVATE KEY-----\n" + key + "\n-----END PRIVATE KEY-----"
 	}
-	if !strings.HasSuffix(strings.TrimSpace(privateKey), "-----END PRIVATE KEY-----") {
-		privateKey = fmt.Sprintf(`%s
------END PRIVATE KEY-----`, strings.TrimSpace(privateKey))
-	}
+	privateKey = key
 	return &Config{
 		Timeout:          10 * time.Second,
 		RetryCount:       3,

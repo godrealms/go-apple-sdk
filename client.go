@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -34,13 +35,40 @@ type Middleware func(*resty.Request) error
 // RequestOption defines function type for request configuration
 type RequestOption func(*resty.Request)
 
-// Client represents the main client structure for Apple services
+// Client represents the main client structure for Apple services.
+//
+// A Client holds one pre-built, immutable resty client per Apple service
+// (App Store Connect / Server / Server Notifications), each with its own base
+// URL and JWT auth middleware. SetService only records which service the
+// legacy Request path should target; it never rebuilds transports, so the
+// connection pools are never thrown away.
+//
+// The per-service clients are safe for concurrent use. SetService and Request
+// synchronize access to the current-service selector, so calling them from
+// multiple goroutines will not corrupt state. Note, however, that SetService
+// mutates a single shared selector: if one goroutine needs service A while
+// another needs service B, give each goroutine its own Client (or use the
+// stateless AppStoreConnect service via [Client.AppStoreConnect]).
 type Client struct {
-	sandbox     bool
-	config      *Config
-	service     AppleClient
-	httpclient  *resty.Client
-	middlewares []Middleware
+	sandbox          bool
+	config           *Config
+	mu               sync.RWMutex
+	service          AppleClient
+	clients          map[AppleClient]*resty.Client // built once in NewClient; read-only thereafter
+	baseURLOverrides map[AppleClient]string        // optional per-service base URL overrides
+	middlewares      []Middleware
+}
+
+// WithServiceBaseURL overrides the base URL used for a specific service. This
+// is useful for pointing the client at a mock/proxy server or a non-default
+// Apple host in tests. Apply it via [NewClient].
+func WithServiceBaseURL(service AppleClient, baseURL string) ClientOption {
+	return func(c *Client) {
+		if c.baseURLOverrides == nil {
+			c.baseURLOverrides = make(map[AppleClient]string)
+		}
+		c.baseURLOverrides[service] = baseURL
+	}
 }
 
 // RequestParams contains all possible parameters for making a request
@@ -59,7 +87,7 @@ type RequestParams struct {
 
 // NewClient creates a new instance of the Apple service client.
 //
-// The returned client is fully initialised: it has a working
+// The returned client is fully initialized: it has a working
 // resty.Client with sane defaults (timeout, retries from
 // [Config]) and any caller-supplied [ClientOption]s applied.
 // Service-specific configuration (base URL, JWT middleware) is
@@ -70,89 +98,69 @@ func NewClient(Sandbox bool, kid, iss, bid, privateKey string, opts ...ClientOpt
 		config:      NewConfig(kid, iss, bid, privateKey),
 		middlewares: make([]Middleware, 0),
 	}
-	// Always initialise the underlying resty.Client and apply
-	// caller options. The previous version gated this behind
-	// `if client.service != ""`, which was always false here
-	// (service is the zero-value empty string at this point),
-	// so resetHttpClient never ran from NewClient and ClientOption
-	// values silently went nowhere. SetService later called
-	// resetHttpClient on its own which masked the nil-deref hazard
-	// in practice — but ClientOption was effectively dead.
-	client.resetHttpClient()
+	// Apply caller options first (they may adjust config), then build the
+	// per-service resty clients from the final config exactly once.
 	for _, opt := range opts {
 		opt(client)
 	}
+	client.clients = client.buildClients()
 	return client
 }
 
-// resetHttpClient reinitializes the HTTP client with base configuration
-func (client *Client) resetHttpClient() {
-	client.httpclient = resty.New().
-		SetBaseURL(client.config.BaseUrl).
-		SetTimeout(client.config.Timeout).
-		SetRetryCount(client.config.RetryCount).
-		SetRetryWaitTime(client.config.RetryWaitTime).
-		SetRetryMaxWaitTime(client.config.RetryMaxWaitTime)
-}
-
-// setupServiceHandlers configures service-specific request handlers
-func (client *Client) setupServiceHandlers(service AppleClient) {
-	handler := client.getServiceHandler(service)
-	if handler != nil {
-		client.httpclient.OnBeforeRequest(handler)
+// baseURLFor returns the correct base URL for the given service, honoring the
+// client's sandbox flag for the storekit-hosted services.
+func (client *Client) baseURLFor(service AppleClient) string {
+	if u, ok := client.baseURLOverrides[service]; ok && u != "" {
+		return u
 	}
-}
-
-// getServiceHandler returns the appropriate handler for the specified service
-func (client *Client) getServiceHandler(service AppleClient) resty.RequestMiddleware {
-	switch service {
-	case AppStoreConnectClient:
-		return func(c *resty.Client, req *resty.Request) error {
-			return client.handleAppStoreConnect(req)
-		}
-	case AppStoreServerClient:
-		return func(c *resty.Client, req *resty.Request) error {
-			return client.handleAppStoreServer(req)
-		}
-	case AppStoreServerNotificationsClient:
-		return func(c *resty.Client, req *resty.Request) error {
-			return client.handleAppStoreNotifications(req)
-		}
-	default:
-		return nil
-	}
-}
-
-// SetService sets the current service type and configures appropriate handlers
-func (client *Client) SetService(service AppleClient) *Client {
-	if client.service == service {
-		return client
-	}
-
-	client.service = service
 	switch service {
 	case AppStoreConnectClient:
 		// App Store Connect API shares a single host for production and sandbox.
 		// See https://developer.apple.com/documentation/appstoreconnectapi
-		client.config.BaseUrl = "https://api.appstoreconnect.apple.com"
-	case AppStoreServerClient:
-		client.config.BaseUrl = "https://api.storekit.itunes.apple.com"
+		return "https://api.appstoreconnect.apple.com"
+	case AppStoreServerClient, AppStoreServerNotificationsClient:
+		// App Store Server API and Server Notifications V2 use the same host
+		// family (storekit.itunes.apple.com / storekit-sandbox).
 		if client.sandbox {
-			client.config.BaseUrl = "https://api.storekit-sandbox.itunes.apple.com"
+			return "https://api.storekit-sandbox.itunes.apple.com"
 		}
-	case AppStoreServerNotificationsClient:
-		// App Store Server Notifications V2 uses the same host family as
-		// App Store Server API (storekit.itunes.apple.com / storekit-sandbox).
-		// See https://developer.apple.com/documentation/appstoreservernotifications
-		client.config.BaseUrl = "https://api.storekit.itunes.apple.com"
-		if client.sandbox {
-			client.config.BaseUrl = "https://api.storekit-sandbox.itunes.apple.com"
-		}
+		return "https://api.storekit.itunes.apple.com"
+	default:
+		return ""
 	}
+}
 
-	client.resetHttpClient()
-	client.setupServiceHandlers(service)
+// buildClients constructs one resty client per service, each pinned to its
+// own base URL and JWT auth middleware. Called once from NewClient; the
+// returned map is treated as read-only afterwards so it needs no locking.
+func (client *Client) buildClients() map[AppleClient]*resty.Client {
+	newServiceClient := func(service AppleClient, handler func(*resty.Request) error) *resty.Client {
+		rc := resty.New().
+			SetBaseURL(client.baseURLFor(service)).
+			SetTimeout(client.config.Timeout).
+			SetRetryCount(client.config.RetryCount).
+			SetRetryWaitTime(client.config.RetryWaitTime).
+			SetRetryMaxWaitTime(client.config.RetryMaxWaitTime)
+		rc.OnBeforeRequest(func(_ *resty.Client, req *resty.Request) error {
+			return handler(req)
+		})
+		return rc
+	}
+	return map[AppleClient]*resty.Client{
+		AppStoreConnectClient:             newServiceClient(AppStoreConnectClient, client.handleAppStoreConnect),
+		AppStoreServerClient:              newServiceClient(AppStoreServerClient, client.handleAppStoreServer),
+		AppStoreServerNotificationsClient: newServiceClient(AppStoreServerNotificationsClient, client.handleAppStoreNotifications),
+	}
+}
 
+// SetService records which service the legacy [Client.Request] path targets.
+// It no longer rebuilds transports (the per-service clients are pre-built in
+// NewClient); it only updates a mutex-guarded selector, so it is safe to call
+// concurrently. See the [Client] doc comment for the cross-service caveat.
+func (client *Client) SetService(service AppleClient) *Client {
+	client.mu.Lock()
+	client.service = service
+	client.mu.Unlock()
 	return client
 }
 
@@ -188,7 +196,7 @@ func (client *Client) handleAppStoreNotifications(req *resty.Request) error {
 // header value for App Store Server API + Server Notifications
 // requests. Returns a wrapped error on private-key parse failure
 // or signing failure rather than silently producing an empty
-// header (the previous behaviour, which led to mysterious 401s
+// header (the previous behavior, which led to mysterious 401s
 // from Apple instead of clear local errors).
 func (client *Client) GenerateAppStoreServerAuthorizationJWT() (string, error) {
 	privateKey, err := types.ParsePrivateKey(client.config.PrivateKey)
@@ -248,7 +256,13 @@ func (client *Client) GenerateAppStoreConnectAuthorizationJWT(method string, end
 
 // Request is the main method for making HTTP requests
 func (client *Client) Request(params RequestParams, opts ...RequestOption) error {
-	req := client.httpclient.R()
+	client.mu.RLock()
+	httpclient := client.clients[client.service]
+	client.mu.RUnlock()
+	if httpclient == nil {
+		return fmt.Errorf("no service selected: call SetService before Request")
+	}
+	req := httpclient.R()
 
 	// Attach context for timeout / cancellation propagation.
 	// Defaults to context.Background when callers leave Ctx nil.
@@ -277,8 +291,11 @@ func (client *Client) Request(params RequestParams, opts ...RequestOption) error
 			case float32, float64:
 				req.SetQueryParam(k, fmt.Sprintf("%v", val))
 			case []string:
+				// Append each value under the same key. SetQueryParam
+				// uses Set (overwrite), which would keep only the last
+				// value; Add preserves all of them (status=1&status=2…).
 				for _, item := range val {
-					req.SetQueryParam(k, item)
+					req.QueryParam.Add(k, item)
 				}
 			default:
 				// 对于其他类型，尝试使用 json.Marshal
@@ -403,7 +420,7 @@ func (client *Client) handleError(resp *resty.Response) error {
 		{"Status Code", resp.StatusCode()},
 		{"Request URL", req.URL.String()},
 		{"Request Method", req.Method},
-		{"Request Headers", req.Header},
+		{"Request Headers", redactSensitiveHeaders(req.Header)},
 		{"Response Time", resp.Time()},
 		{"Response Headers", resp.Header()},
 		{"Response Size", len(resp.Body())},
@@ -414,7 +431,7 @@ func (client *Client) handleError(resp *resty.Response) error {
 	logMsg.WriteString("\n=== Error Response Details ===\n")
 
 	for _, info := range logInfo {
-		logMsg.WriteString(fmt.Sprintf("%-20s: %v\n", info.Key, info.Value))
+		fmt.Fprintf(&logMsg, "%-20s: %v\n", info.Key, info.Value)
 	}
 
 	// 尝试解析响应体为 JSON 并格式化
@@ -455,7 +472,29 @@ func (client *Client) handleError(resp *resty.Response) error {
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode(), string(resp.Body()))
 	}
 
-	return nil
+	// Any non-2xx status that is not a >=400 error (e.g. an unexpected 3xx
+	// from a proxy or misconfigured redirect) still reached here because
+	// Request only calls handleError when IsSuccess() is false. Returning
+	// nil would make the caller believe the request succeeded while Result
+	// was never populated, so surface an explicit error instead.
+	return fmt.Errorf("unexpected non-success HTTP %d: %s",
+		resp.StatusCode(), strings.TrimSpace(string(resp.Body())))
+}
+
+// redactSensitiveHeaders returns a copy of h with credential-bearing headers
+// masked, so diagnostic logging never writes bearer tokens or cookies to the
+// process log.
+func redactSensitiveHeaders(h http.Header) http.Header {
+	clone := h.Clone()
+	if clone == nil {
+		return h
+	}
+	for _, key := range []string{"Authorization", "Cookie", "Proxy-Authorization", "Set-Cookie"} {
+		if clone.Get(key) != "" {
+			clone.Set(key, "[REDACTED]")
+		}
+	}
+	return clone
 }
 
 // AppStoreConnect returns a service for calling the App Store Connect API.

@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      # Keep golang.org/x/* updates together to reduce PR noise; these are the
+      # dependencies most likely to ship security fixes (e.g. golang.org/x/net).
+      golang-x:
+        patterns:
+          - "golang.org/x/*"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

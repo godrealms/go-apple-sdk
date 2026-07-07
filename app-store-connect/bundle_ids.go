@@ -33,7 +33,7 @@ type ListBundleIDsResponse struct {
 // List returns a page of bundle IDs matching the query.
 func (s *BundleIDsService) List(ctx context.Context, query *Query) (*ListBundleIDsResponse, error) {
 	var doc Document[BundleIDAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/bundleIds", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/bundleIds", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -54,7 +54,7 @@ func (s *BundleIDsService) Get(ctx context.Context, id string, query *Query) (*B
 		return nil, &ClientError{Message: "BundleIDs.Get: id is required"}
 	}
 	var doc Document[BundleIDAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/bundleIds/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/bundleIds/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -90,7 +90,7 @@ func (s *BundleIDsService) Create(ctx context.Context, req CreateBundleIDRequest
 		},
 	}
 	var doc Document[BundleIDAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/bundleIds", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/bundleIds", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -102,6 +102,6 @@ func (s *BundleIDsService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "BundleIDs.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/bundleIds/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/bundleIds/"+id, nil, nil, nil)
 	return err
 }

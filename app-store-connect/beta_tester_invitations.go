@@ -41,7 +41,7 @@ func (s *BetaTesterInvitationsService) Create(ctx context.Context, appID, betaTe
 		},
 	}
 	var doc Document[struct{}]
-	if _, err := s.svc.do(ctx, "POST", "/v1/betaTesterInvitations", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/betaTesterInvitations", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()

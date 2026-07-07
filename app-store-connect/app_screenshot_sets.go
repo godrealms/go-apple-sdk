@@ -40,7 +40,7 @@ func (s *AppScreenshotSetsService) ListForLocalization(ctx context.Context, loca
 	}
 	var doc Document[AppScreenshotSetAttributes]
 	path := "/v1/appStoreVersionLocalizations/" + localizationID + "/appScreenshotSets"
-	if _, err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -56,7 +56,7 @@ func (s *AppScreenshotSetsService) Get(ctx context.Context, id string, query *Qu
 		return nil, &ClientError{Message: "AppScreenshotSets.Get: id is required"}
 	}
 	var doc Document[AppScreenshotSetAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/appScreenshotSets/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/appScreenshotSets/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -89,7 +89,7 @@ func (s *AppScreenshotSetsService) Create(ctx context.Context, req CreateAppScre
 		},
 	}
 	var doc Document[AppScreenshotSetAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/appScreenshotSets", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/appScreenshotSets", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -100,6 +100,6 @@ func (s *AppScreenshotSetsService) Delete(ctx context.Context, id string) error 
 	if id == "" {
 		return &ClientError{Message: "AppScreenshotSets.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/appScreenshotSets/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/appScreenshotSets/"+id, nil, nil, nil)
 	return err
 }

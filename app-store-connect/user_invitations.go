@@ -39,7 +39,7 @@ type ListUserInvitationsResponse struct {
 // List returns a page of pending user invitations.
 func (s *UserInvitationsService) List(ctx context.Context, query *Query) (*ListUserInvitationsResponse, error) {
 	var doc Document[UserInvitationAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/userInvitations", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/userInvitations", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -100,7 +100,7 @@ func (s *UserInvitationsService) Create(ctx context.Context, req CreateUserInvit
 	}
 	body := map[string]any{"data": data}
 	var doc Document[UserInvitationAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/userInvitations", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/userInvitations", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -111,6 +111,6 @@ func (s *UserInvitationsService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "UserInvitations.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/userInvitations/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/userInvitations/"+id, nil, nil, nil)
 	return err
 }

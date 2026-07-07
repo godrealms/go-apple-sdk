@@ -61,7 +61,7 @@ func (p *Paginator[T]) Next(ctx context.Context) bool {
 	var doc Document[T]
 	if !p.started {
 		p.started = true
-		if _, err := p.svc.do(ctx, "GET", p.firstURL, p.query, nil, &doc); err != nil {
+		if err := p.svc.do(ctx, "GET", p.firstURL, p.query, nil, &doc); err != nil {
 			p.lastErr = err
 			return false
 		}
@@ -70,7 +70,7 @@ func (p *Paginator[T]) Next(ctx context.Context) bool {
 			p.done = true
 			return false
 		}
-		if _, err := p.svc.do(ctx, "GET", p.nextURL, nil, nil, &doc); err != nil {
+		if err := p.svc.do(ctx, "GET", p.nextURL, nil, nil, &doc); err != nil {
 			p.lastErr = err
 			return false
 		}

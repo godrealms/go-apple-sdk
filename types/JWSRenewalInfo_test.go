@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/godrealms/go-apple-sdk/jws"
 	"github.com/godrealms/go-apple-sdk/internal/testchain"
+	"github.com/godrealms/go-apple-sdk/jws"
 )
 
 func TestJWSRenewalInfo_Decrypt_DefaultVerifierRejectsTestChain(t *testing.T) {

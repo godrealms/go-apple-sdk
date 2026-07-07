@@ -40,11 +40,11 @@ type AppScreenshot = Resource[AppScreenshotAttributes]
 // AppScreenshotAttributes models an appScreenshots resource. The
 // UploadOperations array is only populated on the reservation response.
 type AppScreenshotAttributes struct {
-	FileSize           int64            `json:"fileSize,omitempty"`
-	FileName           string           `json:"fileName,omitempty"`
-	SourceFileChecksum string           `json:"sourceFileChecksum,omitempty"`
-	ImageAsset         *ImageAsset      `json:"imageAsset,omitempty"`
-	AssetToken         string           `json:"assetToken,omitempty"`
+	FileSize           int64       `json:"fileSize,omitempty"`
+	FileName           string      `json:"fileName,omitempty"`
+	SourceFileChecksum string      `json:"sourceFileChecksum,omitempty"`
+	ImageAsset         *ImageAsset `json:"imageAsset,omitempty"`
+	AssetToken         string      `json:"assetToken,omitempty"`
 	AssetDeliveryState *struct {
 		State    string `json:"state,omitempty"`
 		Warnings []struct {
@@ -72,10 +72,10 @@ type ImageAsset struct {
 // endpoint. Apple may split a single screenshot across several
 // operations; each request must include every header in Headers.
 type UploadOperation struct {
-	Method  string                 `json:"method,omitempty"`
-	URL     string                 `json:"url,omitempty"`
-	Length  int64                  `json:"length,omitempty"`
-	Offset  int64                  `json:"offset,omitempty"`
+	Method  string                  `json:"method,omitempty"`
+	URL     string                  `json:"url,omitempty"`
+	Length  int64                   `json:"length,omitempty"`
+	Offset  int64                   `json:"offset,omitempty"`
 	Headers []UploadOperationHeader `json:"requestHeaders,omitempty"`
 }
 
@@ -114,7 +114,7 @@ func (s *AppScreenshotsService) Reserve(ctx context.Context, req ReserveAppScree
 		},
 	}
 	var doc Document[AppScreenshotAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/appScreenshots", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/appScreenshots", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -126,7 +126,7 @@ func (s *AppScreenshotsService) Get(ctx context.Context, id string, query *Query
 		return nil, &ClientError{Message: "AppScreenshots.Get: id is required"}
 	}
 	var doc Document[AppScreenshotAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/appScreenshots/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/appScreenshots/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -209,7 +209,7 @@ func (s *AppScreenshotsService) Commit(ctx context.Context, id string, checksum 
 		},
 	}
 	var doc Document[AppScreenshotAttributes]
-	if _, err := s.svc.do(ctx, "PATCH", "/v1/appScreenshots/"+id, nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "PATCH", "/v1/appScreenshots/"+id, nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -220,7 +220,7 @@ func (s *AppScreenshotsService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "AppScreenshots.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/appScreenshots/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/appScreenshots/"+id, nil, nil, nil)
 	return err
 }
 
@@ -251,29 +251,4 @@ func (s *AppScreenshotsService) Upload(ctx context.Context, screenshotSetID, fil
 	}
 	sum := md5.Sum(data)
 	return s.Commit(ctx, reservation.Id, hex.EncodeToString(sum[:]))
-}
-
-// itoa is a tiny strconv-free helper — used only when building error
-// strings for upload failures, so pulling in strconv would be overkill.
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	neg := false
-	if n < 0 {
-		neg = true
-		n = -n
-	}
-	var buf [20]byte
-	i := len(buf)
-	for n > 0 {
-		i--
-		buf[i] = byte('0' + n%10)
-		n /= 10
-	}
-	if neg {
-		i--
-		buf[i] = '-'
-	}
-	return string(buf[i:])
 }

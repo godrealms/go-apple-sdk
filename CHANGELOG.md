@@ -1,6 +1,46 @@
 # Changelog
 
+> **版本说明**：`v1.0.0` 已发布。当前 `Unreleased` 段累积了多项破坏性变更（见下方
+> **Breaking** 与更早的 `context.Context` 迁移），按 SemVer **下一个发布应为 `v2.0.0`**，
+> 并将模块路径改为 `github.com/godrealms/go-apple-sdk/v2`。在切出 v2 之前不应再打 `v1.x` tag。
+
 ## Unreleased
+
+### 代码审查修复批次（2026-07）
+
+#### Fixed
+
+- `types.Timestamp.Time()` 此前整除 1000 丢弃毫秒；改用 `time.UnixMilli`，保留 Apple 毫秒精度。
+- `types.StorefrontCountryCode.IsValid()` 逻辑反转（`return s == ""`）已修正为 `len(s) == 3`。
+- 遗留 `Client.Request` 的 `[]string` 查询参数此前用 `SetQueryParam`（覆盖）只保留最后一个值，
+  改用 `QueryParam.Add` 保留全部多值。
+- `Client.handleError` 对 3xx 响应此前静默返回 `nil`（调用方误判成功）；现对任何非 2xx 返回错误。
+- **`AppStoreServer.GetNotificationHistory`（BREAKING 签名变更）**：此前返回空结构体 `struct{}`
+  丢弃全部响应，且把 `paginationToken` 错放进 POST body。现返回填充完整字段的
+  `NotificationHistoryResponse`，`paginationToken` 作为查询参数，筛选条件通过新增的
+  `NotificationHistoryRequest` 传入 —— 签名变为
+  `GetNotificationHistory(ctx, client, NotificationHistoryRequest, paginationToken)`。
+- `AppStoreConnect` 的 URL 构造此前未转义调用方 ID，恶意 ID 可注入查询参数/fragment；
+  `resolveURL` 现对相对路径段做百分号编码。
+- `types.ParsePrivateKey` PKCS#8 分支的 `err` 变量遮蔽已消除（安全关键路径）。
+- `NewConfig` 现只在裸 base64 输入上补 PEM 头尾，不再对已带 PEM 头的输入二次包裹。
+
+#### Security
+
+- **凭证脱敏**：`Client.handleError` 的诊断日志此前会打印含 `Authorization: Bearer <JWT>`
+  的完整请求头；现对 `Authorization` / `Cookie` / `Proxy-Authorization` 脱敏。
+- **并发安全**：根 `Client` 的 `SetService` 此前非同步改写共享状态（数据竞争，`-race` 可检出）。
+  改为构造期一次性装配每服务独立的 resty client + 互斥保护的服务选择器；连接池不再被丢弃。
+- **供应链**：升级 `golang.org/x/net`→v0.56.0、`golang-jwt/jwt/v5`→v5.3.1，`go.mod` 固定
+  `go 1.25` + `toolchain go1.26.4`。`govulncheck ./...` 从 11 个可达漏洞降为 **0**。
+
+#### Added
+
+- `WithServiceBaseURL(service, url)` 客户端 Option：覆盖某服务的 base URL（便于测试/代理/mock）。
+- 工程化：GitHub Actions CI（多 OS + `-race` + 覆盖率）、`govulncheck` workflow、Dependabot、
+  `SECURITY.md`、`Makefile`；`.golangci.yml` 迁移到 v2 schema（此前因版本不兼容加载失败）。
+- 回归测试：为上述每个 bug 补充失败→转绿的回归测试；根包覆盖率 0%→60%、`types` 8.5%→45%、
+  `app-store-server` 0%→17%。
 
 ### Security
 

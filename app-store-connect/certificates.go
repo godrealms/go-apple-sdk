@@ -20,14 +20,14 @@ type Certificate = Resource[CertificateAttributes]
 //
 // Reference: https://developer.apple.com/documentation/appstoreconnectapi/certificate/attributes
 type CertificateAttributes struct {
-	Name                string     `json:"name,omitempty"`
-	CertificateType     string     `json:"certificateType,omitempty"`
-	DisplayName         string     `json:"displayName,omitempty"`
-	SerialNumber        string     `json:"serialNumber,omitempty"`
-	Platform            string     `json:"platform,omitempty"`
-	ExpirationDate      *time.Time `json:"expirationDate,omitempty"`
-	CertificateContent  string     `json:"certificateContent,omitempty"` // base64 DER
-	CsrContent          string     `json:"csrContent,omitempty"`
+	Name               string     `json:"name,omitempty"`
+	CertificateType    string     `json:"certificateType,omitempty"`
+	DisplayName        string     `json:"displayName,omitempty"`
+	SerialNumber       string     `json:"serialNumber,omitempty"`
+	Platform           string     `json:"platform,omitempty"`
+	ExpirationDate     *time.Time `json:"expirationDate,omitempty"`
+	CertificateContent string     `json:"certificateContent,omitempty"` // base64 DER
+	CsrContent         string     `json:"csrContent,omitempty"`
 }
 
 // ListCertificatesResponse is the decoded response for [CertificatesService.List].
@@ -40,7 +40,7 @@ type ListCertificatesResponse struct {
 // List returns a page of certificates matching the query.
 func (s *CertificatesService) List(ctx context.Context, query *Query) (*ListCertificatesResponse, error) {
 	var doc Document[CertificateAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/certificates", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/certificates", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -61,7 +61,7 @@ func (s *CertificatesService) Get(ctx context.Context, id string, query *Query) 
 		return nil, &ClientError{Message: "Certificates.Get: id is required"}
 	}
 	var doc Document[CertificateAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/certificates/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/certificates/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -93,7 +93,7 @@ func (s *CertificatesService) Create(ctx context.Context, req CreateCertificateR
 		},
 	}
 	var doc Document[CertificateAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/certificates", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/certificates", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -106,6 +106,6 @@ func (s *CertificatesService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "Certificates.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/certificates/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/certificates/"+id, nil, nil, nil)
 	return err
 }

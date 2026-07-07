@@ -21,7 +21,8 @@ func ParsePrivateKey(pemKey string) (*ecdsa.PrivateKey, error) {
 
 	switch block.Type {
 	case "PRIVATE KEY": // PKCS#8 格式
-		key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		var key any
+		key, err = x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
 			return nil, errors.New("failed to parse PKCS#8 private key: " + err.Error())
 		}

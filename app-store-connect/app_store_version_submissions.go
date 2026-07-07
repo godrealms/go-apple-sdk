@@ -37,7 +37,7 @@ func (s *AppStoreVersionSubmissionsService) Submit(ctx context.Context, versionI
 		},
 	}
 	var doc Document[struct{}]
-	if _, err := s.svc.do(ctx, "POST", "/v1/appStoreVersionSubmissions", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/appStoreVersionSubmissions", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -49,6 +49,6 @@ func (s *AppStoreVersionSubmissionsService) Cancel(ctx context.Context, submissi
 	if submissionID == "" {
 		return &ClientError{Message: "AppStoreVersionSubmissions.Cancel: submissionID is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/appStoreVersionSubmissions/"+submissionID, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/appStoreVersionSubmissions/"+submissionID, nil, nil, nil)
 	return err
 }

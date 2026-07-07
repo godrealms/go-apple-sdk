@@ -2,7 +2,6 @@ package AppStoreConnect
 
 import (
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -168,17 +167,6 @@ func (q *Query) Encode() string {
 	// url.Values.Encode already sorts keys alphabetically, which is what
 	// we want for deterministic output.
 	return v.Encode()
-}
-
-// sortedKeys is a small helper exported for tests that want to iterate
-// filter/field keys deterministically.
-func (q *Query) sortedKeys(m map[string][]string) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
 
 func (q *Query) ensure() {

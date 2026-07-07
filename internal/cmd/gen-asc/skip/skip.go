@@ -1,5 +1,5 @@
 // Package skip loads the "hand-written services" exclusion list from
-// a plain-text file. Two line formats are recognised:
+// a plain-text file. Two line formats are recognized:
 //
 //	resource                 — skip every operation on the resource
 //	resource path-pattern    — skip operations on the resource whose

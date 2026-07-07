@@ -130,7 +130,7 @@ type JWSTransactionDecodedPayload struct {
 	WebOrderLineItemId WebOrderLineItemId `json:"webOrderLineItemId"`
 }
 
-// JWSTransaction is the JWS-Compact-Serialised transaction Apple
+// JWSTransaction is the JWS-Compact-Serialized transaction Apple
 // returns from App Store Server API endpoints. Decrypt verifies
 // and decodes it using the package-default Verifier (Apple Root
 // CA G3 + Apple receipt-signing OID required). To override the

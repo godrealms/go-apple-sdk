@@ -20,16 +20,16 @@ type BetaGroup = Resource[BetaGroupAttributes]
 //
 // Reference: https://developer.apple.com/documentation/appstoreconnectapi/betagroup/attributes
 type BetaGroupAttributes struct {
-	Name                      string     `json:"name,omitempty"`
-	CreatedDate               *time.Time `json:"createdDate,omitempty"`
-	IsInternalGroup           *bool      `json:"isInternalGroup,omitempty"`
-	HasAccessToAllBuilds      *bool      `json:"hasAccessToAllBuilds,omitempty"`
-	PublicLinkEnabled         *bool      `json:"publicLinkEnabled,omitempty"`
-	PublicLink                string     `json:"publicLink,omitempty"`
-	PublicLinkLimitEnabled    *bool      `json:"publicLinkLimitEnabled,omitempty"`
-	PublicLinkLimit           *int       `json:"publicLinkLimit,omitempty"`
-	FeedbackEnabled           *bool      `json:"feedbackEnabled,omitempty"`
-	IosBuildsAvailableForAppleSiliconMac *bool `json:"iosBuildsAvailableForAppleSiliconMac,omitempty"`
+	Name                                 string     `json:"name,omitempty"`
+	CreatedDate                          *time.Time `json:"createdDate,omitempty"`
+	IsInternalGroup                      *bool      `json:"isInternalGroup,omitempty"`
+	HasAccessToAllBuilds                 *bool      `json:"hasAccessToAllBuilds,omitempty"`
+	PublicLinkEnabled                    *bool      `json:"publicLinkEnabled,omitempty"`
+	PublicLink                           string     `json:"publicLink,omitempty"`
+	PublicLinkLimitEnabled               *bool      `json:"publicLinkLimitEnabled,omitempty"`
+	PublicLinkLimit                      *int       `json:"publicLinkLimit,omitempty"`
+	FeedbackEnabled                      *bool      `json:"feedbackEnabled,omitempty"`
+	IosBuildsAvailableForAppleSiliconMac *bool      `json:"iosBuildsAvailableForAppleSiliconMac,omitempty"`
 }
 
 // ListBetaGroupsResponse is the decoded response for [BetaGroupsService.List].
@@ -43,7 +43,7 @@ type ListBetaGroupsResponse struct {
 // See https://developer.apple.com/documentation/appstoreconnectapi/list_beta_groups
 func (s *BetaGroupsService) List(ctx context.Context, query *Query) (*ListBetaGroupsResponse, error) {
 	var doc Document[BetaGroupAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/betaGroups", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/betaGroups", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -64,7 +64,7 @@ func (s *BetaGroupsService) Get(ctx context.Context, id string, query *Query) (*
 		return nil, &ClientError{Message: "BetaGroups.Get: id is required"}
 	}
 	var doc Document[BetaGroupAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/betaGroups/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/betaGroups/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -116,7 +116,7 @@ func (s *BetaGroupsService) Create(ctx context.Context, req CreateBetaGroupReque
 		},
 	}
 	var doc Document[BetaGroupAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/betaGroups", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/betaGroups", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -127,7 +127,7 @@ func (s *BetaGroupsService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "BetaGroups.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/betaGroups/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/betaGroups/"+id, nil, nil, nil)
 	return err
 }
 
@@ -142,7 +142,7 @@ func (s *BetaGroupsService) AddBuilds(ctx context.Context, groupID string, build
 		return &ClientError{Message: "BetaGroups.AddBuilds: buildIDs is empty"}
 	}
 	body := map[string]any{"data": buildIdentifiers("builds", buildIDs)}
-	_, err := s.svc.do(ctx, "POST", "/v1/betaGroups/"+groupID+"/relationships/builds", nil, body, nil)
+	err := s.svc.do(ctx, "POST", "/v1/betaGroups/"+groupID+"/relationships/builds", nil, body, nil)
 	return err
 }
 
@@ -156,7 +156,7 @@ func (s *BetaGroupsService) AddBetaTesters(ctx context.Context, groupID string, 
 		return &ClientError{Message: "BetaGroups.AddBetaTesters: testerIDs is empty"}
 	}
 	body := map[string]any{"data": buildIdentifiers("betaTesters", testerIDs)}
-	_, err := s.svc.do(ctx, "POST", "/v1/betaGroups/"+groupID+"/relationships/betaTesters", nil, body, nil)
+	err := s.svc.do(ctx, "POST", "/v1/betaGroups/"+groupID+"/relationships/betaTesters", nil, body, nil)
 	return err
 }
 

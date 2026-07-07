@@ -34,7 +34,7 @@ type ListUsersResponse struct {
 // List returns a page of users matching the query.
 func (s *UsersService) List(ctx context.Context, query *Query) (*ListUsersResponse, error) {
 	var doc Document[UserAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/users", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/users", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -55,7 +55,7 @@ func (s *UsersService) Get(ctx context.Context, id string, query *Query) (*User,
 		return nil, &ClientError{Message: "Users.Get: id is required"}
 	}
 	var doc Document[UserAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/users/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/users/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -108,7 +108,7 @@ func (s *UsersService) Update(ctx context.Context, id string, update *UserUpdate
 		},
 	}
 	var doc Document[UserAttributes]
-	if _, err := s.svc.do(ctx, "PATCH", "/v1/users/"+id, nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "PATCH", "/v1/users/"+id, nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -119,6 +119,6 @@ func (s *UsersService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "Users.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/users/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/users/"+id, nil, nil, nil)
 	return err
 }

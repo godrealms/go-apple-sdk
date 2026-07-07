@@ -52,7 +52,7 @@ func (s *AppStoreVersionLocalizationsService) ListForVersion(ctx context.Context
 	}
 	var doc Document[AppStoreVersionLocalizationAttributes]
 	path := "/v1/appStoreVersions/" + versionID + "/appStoreVersionLocalizations"
-	if _, err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -68,7 +68,7 @@ func (s *AppStoreVersionLocalizationsService) Get(ctx context.Context, id string
 		return nil, &ClientError{Message: "AppStoreVersionLocalizations.Get: id is required"}
 	}
 	var doc Document[AppStoreVersionLocalizationAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/appStoreVersionLocalizations/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/appStoreVersionLocalizations/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -125,7 +125,7 @@ func (s *AppStoreVersionLocalizationsService) Create(ctx context.Context, req Cr
 		},
 	}
 	var doc Document[AppStoreVersionLocalizationAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/appStoreVersionLocalizations", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/appStoreVersionLocalizations", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -182,7 +182,7 @@ func (u *AppStoreVersionLocalizationUpdate) WhatsNew(v string) *AppStoreVersionL
 }
 
 // Set applies an arbitrary attribute key/value pair for fields this
-// builder has not modelled yet.
+// builder has not modeled yet.
 func (u *AppStoreVersionLocalizationUpdate) Set(key string, value any) *AppStoreVersionLocalizationUpdate {
 	u.attrs[key] = value
 	return u
@@ -208,7 +208,7 @@ func (s *AppStoreVersionLocalizationsService) Update(ctx context.Context, id str
 		},
 	}
 	var doc Document[AppStoreVersionLocalizationAttributes]
-	if _, err := s.svc.do(ctx, "PATCH", "/v1/appStoreVersionLocalizations/"+id, nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "PATCH", "/v1/appStoreVersionLocalizations/"+id, nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -220,6 +220,6 @@ func (s *AppStoreVersionLocalizationsService) Delete(ctx context.Context, id str
 	if id == "" {
 		return &ClientError{Message: "AppStoreVersionLocalizations.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/appStoreVersionLocalizations/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/appStoreVersionLocalizations/"+id, nil, nil, nil)
 	return err
 }

@@ -41,3 +41,6 @@ credentials/
 .DS_Store
 .idea/
 .vscode/
+
+# Local code-review reports (agent artifacts, not source)
+.full-review/

@@ -21,7 +21,7 @@ Go Apple SDK 是一个覆盖 Apple 开发者生态两套核心 API 的 Go SDK，
 - Report 下载自动处理 `application/a-gzip` 内联 gzip 负载
 - 截图上传封装 Apple 的 reservation → PUT → MD5 commit 三步流程，一次调用完成
 - 全量 Context 支持（所有 API 都要求 `context.Context`，方便超时/取消）
-- httptest + fixture 驱动的单测，覆盖率 > 85%
+- httptest + fixture 驱动的单测（`app-store-connect` ~85%、`jws` ~94%；根 client 与 legacy `app-store-server` 也有回归覆盖）
 
 ## 安装
 
@@ -77,15 +77,22 @@ client := Apple.NewClient(
 ### 1. 测试服务器通知
 
 ```go
-import AppStoreServer "github.com/godrealms/go-apple-sdk/app-store-server"
+import (
+    "context"
 
-response, err := AppStoreServer.RequestTestNotification(client)
+    AppStoreServer "github.com/godrealms/go-apple-sdk/app-store-server"
+)
+
+// 所有 App Store Server API 函数的第一个参数都是 context.Context。
+ctx := context.Background()
+
+response, err := AppStoreServer.RequestTestNotification(ctx, client)
 if err != nil {
     log.Fatal(err)
 }
 log.Println("TestNotificationToken:", response.TestNotificationToken)
 
-testNotification, err := AppStoreServer.GetTestNotificationStatus(client, response.TestNotificationToken)
+testNotification, err := AppStoreServer.GetTestNotificationStatus(ctx, client, response.TestNotificationToken)
 if err != nil {
     log.Fatal(err)
 }
@@ -94,7 +101,7 @@ if err != nil {
 ### 2. 查询交易信息
 
 ```go
-info, err := AppStoreServer.GetTransactionInfo(client, "YOUR_TRANSACTION_ID")
+info, err := AppStoreServer.GetTransactionInfo(ctx, client, "YOUR_TRANSACTION_ID")
 if err != nil {
     log.Fatal(err)
 }
@@ -108,7 +115,7 @@ if err != nil {
 ### 3. 查询订阅状态
 
 ```go
-subscriptions, err := AppStoreServer.GetAllSubscriptionStatuses(client, "TRANSACTION_ID")
+subscriptions, err := AppStoreServer.GetAllSubscriptionStatuses(ctx, client, "TRANSACTION_ID")
 if err != nil {
     log.Fatal(err)
 }
@@ -132,7 +139,7 @@ for _, datum := range subscriptions.Data {
 ### 4. 查询交易历史
 
 ```go
-history, err := AppStoreServer.GetTransactionHistory(client, "TRANSACTION_ID", map[string]any{
+history, err := AppStoreServer.GetTransactionHistory(ctx, client, "TRANSACTION_ID", map[string]any{
     "sort": "DESCENDING",
     // "revision": "",
     // "startDate": "",
@@ -157,7 +164,7 @@ for _, transaction := range history.SignedTransactions {
 ### 5. 发送消费信息
 
 ```go
-err := AppStoreServer.SendConsumptionInformation(client, "TRANSACTION_ID", &AppStoreServer.ConsumptionRequest{
+err := AppStoreServer.SendConsumptionInformation(ctx, client, "TRANSACTION_ID", &AppStoreServer.ConsumptionRequest{
     AccountTenure:            0,
     AppAccountToken:          "",
     ConsumptionStatus:        0,

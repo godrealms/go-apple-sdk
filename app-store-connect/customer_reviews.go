@@ -60,7 +60,7 @@ func (s *CustomerReviewsService) ListForApp(ctx context.Context, appID string, q
 		return nil, &ClientError{Message: "CustomerReviews.ListForApp: appID is required"}
 	}
 	var doc Document[CustomerReviewAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/apps/"+appID+"/customerReviews", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/apps/"+appID+"/customerReviews", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -88,7 +88,7 @@ func (s *CustomerReviewsService) Get(ctx context.Context, id string, query *Quer
 		return nil, &ClientError{Message: "CustomerReviews.Get: id is required"}
 	}
 	var doc Document[CustomerReviewAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/customerReviews/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/customerReviews/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -125,7 +125,7 @@ func (s *CustomerReviewsService) Respond(ctx context.Context, reviewID, response
 		},
 	}
 	var doc Document[CustomerReviewResponseAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/customerReviewResponses", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/customerReviewResponses", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -138,6 +138,6 @@ func (s *CustomerReviewsService) DeleteResponse(ctx context.Context, responseID 
 	if responseID == "" {
 		return &ClientError{Message: "CustomerReviews.DeleteResponse: responseID is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/customerReviewResponses/"+responseID, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/customerReviewResponses/"+responseID, nil, nil, nil)
 	return err
 }

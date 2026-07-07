@@ -285,13 +285,13 @@ func (s *Service) logRequest(method, reqURL string, statusCode int, start time.T
 // path may be either a path relative to the base URL (e.g. "/v1/apps")
 // or an absolute URL (e.g. an Apple pagination "next" link); both are
 // supported so paginators can follow cursor links verbatim.
-func (s *Service) do(ctx context.Context, method, path string, query *Query, body any, out any) (*http.Response, error) {
+func (s *Service) do(ctx context.Context, method, path string, query *Query, body any, out any) error {
 	start := time.Now()
 	reqURL, err := s.resolveURL(path, query)
 	if err != nil {
 		wrapped := &ClientError{Message: "invalid request URL", Cause: err}
 		s.logRequest(method, path, 0, start, wrapped)
-		return nil, wrapped
+		return wrapped
 	}
 
 	var bodyReader io.Reader
@@ -300,7 +300,7 @@ func (s *Service) do(ctx context.Context, method, path string, query *Query, bod
 		if err != nil {
 			wrapped := &ClientError{Message: "marshal request body", Cause: err}
 			s.logRequest(method, reqURL, 0, start, wrapped)
-			return nil, wrapped
+			return wrapped
 		}
 		bodyReader = bytes.NewReader(buf)
 	}
@@ -309,7 +309,7 @@ func (s *Service) do(ctx context.Context, method, path string, query *Query, bod
 	if err != nil {
 		wrapped := &ClientError{Message: "build request", Cause: err}
 		s.logRequest(method, reqURL, 0, start, wrapped)
-		return nil, wrapped
+		return wrapped
 	}
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
@@ -321,14 +321,14 @@ func (s *Service) do(ctx context.Context, method, path string, query *Query, bod
 	if err := s.authorizer.Authorize(req); err != nil {
 		wrapped := &ClientError{Message: "authorize request", Cause: err}
 		s.logRequest(method, reqURL, 0, start, wrapped)
-		return nil, wrapped
+		return wrapped
 	}
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		wrapped := &ClientError{Message: "execute request", Cause: err}
 		s.logRequest(method, reqURL, 0, start, wrapped)
-		return nil, wrapped
+		return wrapped
 	}
 	defer resp.Body.Close()
 
@@ -336,24 +336,24 @@ func (s *Service) do(ctx context.Context, method, path string, query *Query, bod
 	if err != nil {
 		wrapped := &ClientError{Message: "read response body", Cause: err}
 		s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
-		return resp, wrapped
+		return wrapped
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		apiErr := parseErrorBody(resp.StatusCode, respBody)
 		s.logRequest(method, reqURL, resp.StatusCode, start, apiErr)
-		return resp, apiErr
+		return apiErr
 	}
 
 	if out != nil && len(respBody) > 0 {
 		if err := json.Unmarshal(respBody, out); err != nil {
 			wrapped := &ClientError{Message: "decode response body", Cause: err}
 			s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
-			return resp, wrapped
+			return wrapped
 		}
 	}
 	s.logRequest(method, reqURL, resp.StatusCode, start, nil)
-	return resp, nil
+	return nil
 }
 
 // doRaw performs an HTTP request and returns the raw (optionally
@@ -371,20 +371,20 @@ func (s *Service) do(ctx context.Context, method, path string, query *Query, bod
 // Non-2xx responses are parsed via [parseErrorBody] into an [APIError].
 // Report endpoints serve JSON error bodies on failure, not gzipped
 // ones, so this treatment is correct.
-func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) (*http.Response, []byte, error) {
+func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) ([]byte, error) {
 	start := time.Now()
 	reqURL, err := s.resolveURL(path, query)
 	if err != nil {
 		wrapped := &ClientError{Message: "invalid request URL", Cause: err}
 		s.logRequest(method, path, 0, start, wrapped)
-		return nil, nil, wrapped
+		return nil, wrapped
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, reqURL, nil)
 	if err != nil {
 		wrapped := &ClientError{Message: "build request", Cause: err}
 		s.logRequest(method, reqURL, 0, start, wrapped)
-		return nil, nil, wrapped
+		return nil, wrapped
 	}
 	// Apple's report endpoints require this Accept header to serve
 	// the gzipped TSV payload.
@@ -395,14 +395,14 @@ func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) 
 	if err := s.authorizer.Authorize(req); err != nil {
 		wrapped := &ClientError{Message: "authorize request", Cause: err}
 		s.logRequest(method, reqURL, 0, start, wrapped)
-		return nil, nil, wrapped
+		return nil, wrapped
 	}
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		wrapped := &ClientError{Message: "execute request", Cause: err}
 		s.logRequest(method, reqURL, 0, start, wrapped)
-		return nil, nil, wrapped
+		return nil, wrapped
 	}
 	defer resp.Body.Close()
 
@@ -410,13 +410,13 @@ func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) 
 	if err != nil {
 		wrapped := &ClientError{Message: "read response body", Cause: err}
 		s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
-		return resp, nil, wrapped
+		return nil, wrapped
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		apiErr := parseErrorBody(resp.StatusCode, respBody)
 		s.logRequest(method, reqURL, resp.StatusCode, start, apiErr)
-		return resp, nil, apiErr
+		return nil, apiErr
 	}
 
 	// Apple reports ship the gzip as the payload itself — not as
@@ -429,19 +429,19 @@ func (s *Service) doRaw(ctx context.Context, method, path string, query *Query) 
 		if err != nil {
 			wrapped := &ClientError{Message: "open gzip stream", Cause: err}
 			s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
-			return resp, nil, wrapped
+			return nil, wrapped
 		}
 		defer zr.Close()
 		decoded, err := io.ReadAll(zr)
 		if err != nil {
 			wrapped := &ClientError{Message: "decompress gzip stream", Cause: err}
 			s.logRequest(method, reqURL, resp.StatusCode, start, wrapped)
-			return resp, nil, wrapped
+			return nil, wrapped
 		}
 		respBody = decoded
 	}
 	s.logRequest(method, reqURL, resp.StatusCode, start, nil)
-	return resp, respBody, nil
+	return respBody, nil
 }
 
 // isGzipped returns true if the given buffer begins with the gzip magic
@@ -459,12 +459,21 @@ func (s *Service) resolveURL(path string, query *Query) (string, error) {
 		err error
 	)
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+		// Absolute URL: pagination links returned by Apple, already encoded.
 		u, err = url.Parse(path)
 	} else {
-		if !strings.HasPrefix(path, "/") {
-			path = "/" + path
+		// Relative path built by the SDK. Parse only the base, then assign the
+		// path via url.URL.Path (the *decoded* form) so that Go percent-encodes
+		// any characters illegal in a path segment (?, #, space, …). This stops
+		// a caller-supplied ID from injecting query parameters or a fragment —
+		// legitimate query parameters arrive only through the `query` argument.
+		u, err = url.Parse(s.baseURL)
+		if err == nil {
+			if !strings.HasPrefix(path, "/") {
+				path = "/" + path
+			}
+			u.Path += path
 		}
-		u, err = url.Parse(s.baseURL + path)
 	}
 	if err != nil {
 		return "", err

@@ -9,7 +9,8 @@
 //
 //	c := Apple.NewClient(false, kid, iss, bid, privateKey)
 //	svc := c.AppStoreConnect()
-//	apps, _, err := svc.Apps().List(ctx, AppStoreConnect.NewQuery().Limit(200))
+//	resp, err := svc.Apps().List(ctx, AppStoreConnect.NewQuery().Limit(200))
+//	// resp.Data holds the apps; iterate or page with svc.Apps().ListPaginator.
 //
 // It can also be used standalone by providing an [Authorizer]:
 //

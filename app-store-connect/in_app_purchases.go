@@ -49,7 +49,7 @@ func (s *InAppPurchasesService) ListForApp(ctx context.Context, appID string, qu
 	}
 	var doc Document[InAppPurchaseAttributes]
 	path := "/v1/apps/" + appID + "/inAppPurchasesV2"
-	if _, err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", path, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -71,7 +71,7 @@ func (s *InAppPurchasesService) Get(ctx context.Context, id string, query *Query
 		return nil, &ClientError{Message: "InAppPurchases.Get: id is required"}
 	}
 	var doc Document[InAppPurchaseAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/inAppPurchases/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/inAppPurchases/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -121,7 +121,7 @@ func (s *InAppPurchasesService) Create(ctx context.Context, req CreateInAppPurch
 		},
 	}
 	var doc Document[InAppPurchaseAttributes]
-	if _, err := s.svc.do(ctx, "POST", "/v1/inAppPurchases", nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "POST", "/v1/inAppPurchases", nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -181,7 +181,7 @@ func (s *InAppPurchasesService) Update(ctx context.Context, id string, update *I
 		},
 	}
 	var doc Document[InAppPurchaseAttributes]
-	if _, err := s.svc.do(ctx, "PATCH", "/v1/inAppPurchases/"+id, nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "PATCH", "/v1/inAppPurchases/"+id, nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -192,6 +192,6 @@ func (s *InAppPurchasesService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return &ClientError{Message: "InAppPurchases.Delete: id is required"}
 	}
-	_, err := s.svc.do(ctx, "DELETE", "/v1/inAppPurchases/"+id, nil, nil, nil)
+	err := s.svc.do(ctx, "DELETE", "/v1/inAppPurchases/"+id, nil, nil, nil)
 	return err
 }

@@ -23,15 +23,15 @@ type Build = Resource[BuildAttributes]
 //
 // Reference: https://developer.apple.com/documentation/appstoreconnectapi/build/attributes
 type BuildAttributes struct {
-	Version                  string     `json:"version,omitempty"`
-	UploadedDate             *time.Time `json:"uploadedDate,omitempty"`
-	ExpirationDate           *time.Time `json:"expirationDate,omitempty"`
-	Expired                  *bool      `json:"expired,omitempty"`
-	MinOsVersion             string     `json:"minOsVersion,omitempty"`
-	ProcessingState          string     `json:"processingState,omitempty"`
-	BuildAudienceType        string     `json:"buildAudienceType,omitempty"`
-	UsesNonExemptEncryption  *bool      `json:"usesNonExemptEncryption,omitempty"`
-	IconAssetToken           any        `json:"iconAssetToken,omitempty"`
+	Version                 string     `json:"version,omitempty"`
+	UploadedDate            *time.Time `json:"uploadedDate,omitempty"`
+	ExpirationDate          *time.Time `json:"expirationDate,omitempty"`
+	Expired                 *bool      `json:"expired,omitempty"`
+	MinOsVersion            string     `json:"minOsVersion,omitempty"`
+	ProcessingState         string     `json:"processingState,omitempty"`
+	BuildAudienceType       string     `json:"buildAudienceType,omitempty"`
+	UsesNonExemptEncryption *bool      `json:"usesNonExemptEncryption,omitempty"`
+	IconAssetToken          any        `json:"iconAssetToken,omitempty"`
 }
 
 // ListBuildsResponse is the decoded response for [BuildsService.List].
@@ -45,7 +45,7 @@ type ListBuildsResponse struct {
 // See https://developer.apple.com/documentation/appstoreconnectapi/list_builds
 func (s *BuildsService) List(ctx context.Context, query *Query) (*ListBuildsResponse, error) {
 	var doc Document[BuildAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/builds", query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/builds", query, nil, &doc); err != nil {
 		return nil, err
 	}
 	data, err := doc.AsCollection()
@@ -73,7 +73,7 @@ func (s *BuildsService) Get(ctx context.Context, id string, query *Query) (*Buil
 		return nil, &ClientError{Message: "Builds.Get: id is required"}
 	}
 	var doc Document[BuildAttributes]
-	if _, err := s.svc.do(ctx, "GET", "/v1/builds/"+id, query, nil, &doc); err != nil {
+	if err := s.svc.do(ctx, "GET", "/v1/builds/"+id, query, nil, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
@@ -129,7 +129,7 @@ func (s *BuildsService) Update(ctx context.Context, id string, update *BuildUpda
 		},
 	}
 	var doc Document[BuildAttributes]
-	if _, err := s.svc.do(ctx, "PATCH", "/v1/builds/"+id, nil, body, &doc); err != nil {
+	if err := s.svc.do(ctx, "PATCH", "/v1/builds/"+id, nil, body, &doc); err != nil {
 		return nil, err
 	}
 	return doc.AsResource()
